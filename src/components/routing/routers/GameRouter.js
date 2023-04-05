@@ -8,7 +8,7 @@ const GameRouter = props => {
    */
   return (
     <div style={{display: 'flex', flexDirection: 'column'}}>
-      <Route exact path={`${props.base}/dashboard`}>
+      <Route exact path={`${props.base}/lobby`}>
         <Game/>
       </Route>
       <Route exact path={`${props.base}`}>
