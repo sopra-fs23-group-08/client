@@ -15,18 +15,45 @@ const Lobby = () => {
 
     const classes = useStyles();
     const history = useHistory();
-  
+    const [language, setLanguage] = useState("en");
+    const [playlist, setPlaylist] = useState("");
+    const [numPlayers, setNumPlayers] = useState(3);
+    const [showStartInfo, setShowStartInfo] = useState(true);
+    const [balance, setBalance] = useState(0);
+    const [bigBlind, setBigBlind] = useState(0);
+    const [smallBlind, setSmallBlind] = useState(0);
+
     const handleStartGame = () => {
-      history.push('/game');
-    };
-  
-    const handleUserClick = (id) => {
-      history.push(`/users/${id}`);
-    }
-  
-    const handleBackClick = () => {
-        history.push('/home');
-    };
+        const data = {
+          language,
+          playlist,
+          numPlayers,
+          showStartInfo,
+          balance,
+          bigBlind,
+          smallBlind,
+        };
+    
+       // Send the data to the backend using an API call
+  fetch("/api/startGame", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      console.log(data);
+
+      // Navigate to the game page with the created game ID
+      history.push(`/games/${data.gameId}`);
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+    });
+};
+
 
 
     const lobby = (
