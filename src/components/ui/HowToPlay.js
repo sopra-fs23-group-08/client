@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@material-ui/core';
+import {Dialog, DialogTitle, DialogContent, DialogActions, Button, Tooltip} from '@material-ui/core';
+import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
+import IconButton from '@material-ui/core/IconButton';
+import PropTypes from "prop-types";
 
 
 // players in a game can click How to play button in game page, to see the prompt of how to play
@@ -11,7 +14,7 @@ import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mate
 // if player doesn't close how to play, the prompt will close automatically after 15 seconds, to make sure the player doesn't stay too long in this page
 
 
-const HowToPlay = () => {
+const HowToPlay = (props) => {
   const [open, setOpen] = useState(false);
 
   const handleClickOpen = () => {
@@ -31,7 +34,12 @@ const HowToPlay = () => {
 
   return (
     <div>
-      <button onClick={handleClickOpen}>How to Play</button>
+      <Button onClick={handleClickOpen}
+              variant={'outlined'}
+              color={'inherit'}
+      >
+        How to Play
+      </Button>
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>How to Play</DialogTitle>
         <DialogContent dividers>
@@ -100,5 +108,9 @@ const HowToPlay = () => {
     </div>
   );
 };
+
+HowToPlay.propTypes = {
+  color: PropTypes.string
+}
 
 export default HowToPlay;
