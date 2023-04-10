@@ -7,10 +7,11 @@ import {
     Toolbar,
     Avatar,
     IconButton,
-    Tooltip
+    Button,
+    Tooltip, Dialog, DialogTitle, DialogContent, TextField, DialogActions
 } from "@material-ui/core";
 import {makeStyles} from "@material-ui/core/styles";
-import React from "react";
+import React, {useState} from "react";
 import SearchIcon from '@material-ui/icons/Search';
 import VideogameAssetIcon from '@material-ui/icons/VideogameAsset';
 import InputIcon from '@material-ui/icons/Input';
@@ -49,10 +50,28 @@ const useStyles = makeStyles((theme) => ({
     }
 
 }));
+
+
 const GuestHomepage = props => {
 
     const classes = useStyles();
     const history = useHistory();
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [LobbyID, setLobbyID] = useState([""]);
+
+    const createGame = () => {
+        history.push("/games/123/lobby")
+    }
+
+    const joinLobby = () => {
+        history.push(`/games/${LobbyID}/lobby`)
+    }
+
+    const handleLobbyIDChange = (e) => {setLobbyID(e.target.value)}
+
+    const toggleDialog = () => {
+        setDialogOpen(!dialogOpen);
+    }
 
     return (
         <Grid container
@@ -81,21 +100,39 @@ const GuestHomepage = props => {
                     <Grid container
                           className={classes.cardContainer}
                     >
-                        <Grid Item>
+                        <Grid item>
                             <Tooltip title={'Join Game'}>
-                                <IconButton onClick={() => {}}>
+                                <IconButton onClick={toggleDialog}>
                                     <InputIcon className={classes.menuIcon}/>
                                 </IconButton>
                             </Tooltip>
+                            <Dialog open={dialogOpen} onClose={toggleDialog}>
+                                <DialogTitle>
+                                    Join Game
+                                </DialogTitle>
+                                <DialogContent>
+                                    <TextField label={"Enter Lobby ID"}
+                                               onChange={handleLobbyIDChange}
+                                    />
+                                </DialogContent>
+                                <DialogActions>
+                                    <Button onClick={toggleDialog}>
+                                        Cancel
+                                    </Button>
+                                    <Button onClick={joinLobby}>
+                                        Join
+                                    </Button>
+                                </DialogActions>
+                            </Dialog>
                         </Grid>
-                        <Grid Item>
+                        <Grid item>
                             <Tooltip title={'Create Game'}>
-                                <IconButton onClick={() => {}}>
+                                <IconButton onClick={() => {createGame()}}>
                                     <VideogameAssetIcon className={classes.menuIcon}/>
                                 </IconButton>
                             </Tooltip>
                         </Grid>
-                        <Grid Item>
+                        <Grid item>
                             <Tooltip title={'Search Player'}>
                                 <IconButton onClick={() => history.push("/users/search")}>
                                     <SearchIcon className={classes.menuIcon}/>

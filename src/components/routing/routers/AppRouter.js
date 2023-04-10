@@ -9,6 +9,7 @@ import Homepage from "components/views/Homepage";
 import Search from "components/views/Search";
 import Lobby from "components/views/Lobby";
 import Register from "../../views/Register";
+import TestLobby from "../../views/TestLobby";
 
 /**
  * Main router of your application.
@@ -26,17 +27,17 @@ const AppRouter = () => {
         <Route exact path="/users/search">
           <Search/>
         </Route>
-        <Route path="/users/:user_id/edit">
+        <Route path="/users/:userId/edit">
           <EditProfile/>
         </Route>
-        <Route path="/users/:user_id">
+        <Route path="/users/:userId">
           <Profile/>
         </Route>
-        <Route path="/games/:game_id">
-          <GameRouter base="/games:game_id"/>
+        <Route path="/games/:gameId/lobby">
+          <TestLobby/>
         </Route>
-        <Route path="/lobbies/:game_id">
-          <Lobby/>
+        <Route path="/games/:gameId">
+          <GameRouter base="/games:gameId"/>
         </Route>
         <Route path="/home">
           <HomeGuard>
