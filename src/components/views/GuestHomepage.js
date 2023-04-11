@@ -16,6 +16,7 @@ import SearchIcon from '@material-ui/icons/Search';
 import VideogameAssetIcon from '@material-ui/icons/VideogameAsset';
 import InputIcon from '@material-ui/icons/Input';
 import HowToPlay from "../ui/HowToPlay";
+import {api} from "../../helpers/api";
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -59,8 +60,10 @@ const GuestHomepage = props => {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [LobbyID, setLobbyID] = useState([""]);
 
-    const createGame = () => {
-        history.push("/games/123/lobby")
+    const createGame = async () => {
+        console.log("Creating game...");
+        const response = await api.post("/games");
+        history.push(`/games/${response.data.id}/lobby`)
     }
 
     const joinLobby = () => {

@@ -10,7 +10,7 @@ export const HomeGuard = props => {
 
     // if user is registered, render children
     const token = localStorage.getItem("token");
-    if (token.slice(0, 5) !== "guest") {
+    if (token && token.slice(0, 5) !== "guest") {
         return props.children;
     }
     // if user is guest, render GuestHomepage
