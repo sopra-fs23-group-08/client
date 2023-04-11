@@ -41,6 +41,13 @@ const Login = props => {
     */
   };
 
+  const playAsGuest =  () => {
+    const guestToken = "guest" + crypto.randomUUID();
+    localStorage.setItem("token", guestToken);
+
+    history.push(`/home`);
+  }
+
   return (
     <BaseContainer>
       <BaseBox>
