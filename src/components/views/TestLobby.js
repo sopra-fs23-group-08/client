@@ -5,15 +5,21 @@ import Stomp from "stompjs";
 import {useParams} from "react-router-dom";
 import SockJS from "sockjs-client";
 import {api} from "../../helpers/api";
+import PropTypes from "prop-types";
 
 const TestLobby = () => {
     const [players, setPlayers] = useState([]);
-    const [stompClient, setStompClient] = useState(null);
-    const [username, setUsername] = useState("");
-
+    const [username, setUsername] = useState("test"+Math.floor(Math.random()*1000));
     const { gameId } = useParams();
 
-    const PlayerList = () => {
+    const [stompClient, setStompClient] = useState(null);
+    // subscribe to player-list updates
+    const [playersSubscription, setPlayersSubscription] = useState(null);
+    // subscribe to setting updates
+    const [settingsSubscription, setSettingsSubscription] = useState(null);
+
+    const PlayerList = (props) => {
+
         return (
             <Grid container
                   width={"100vw"}
@@ -23,13 +29,13 @@ const TestLobby = () => {
                   alignItems={"center"}
                   spacing={2}
             >
-                {players.map((player) => {
+                {props.list.map((player) => {
                     return (
-                        <Grid item>
+                        <Grid item key={players.indexOf(player)}>
                             <Card>
                                 <CardContent>
                                     <Typography variant={"h6"}>
-                                        {player}
+                                        {player.username}
                                     </Typography>
                                 </CardContent>
                             </Card>
@@ -40,47 +46,43 @@ const TestLobby = () => {
         )
     }
 
-    const changeUsername = (event) => {
-        setUsername(event.target.value)
-    };
-
-    const doSend = () => {
-        stompClient.send(
-            "/app/games/" + gameId + "/players",
-            {},
-            JSON.stringify({username})
-        );
+    PlayerList.propTypes = {
+        list: PropTypes.array
     }
-    let content = <PlayerList/>;
+    // TODO: for some reason the player list is not updated when the players change
+    // re-render PlayersList when players change
+    let content = <PlayerList list={players}/>;
 
     useEffect(() => {
-        content = <PlayerList/>;
+        content = <PlayerList list={players}/>;
     }, [players])
 
     // when component first mounts:
     // 1. create a new websocket connection
     // 2. subscribe to the /topic/games/{gameId}/players topic
     // 3. send a message to the /app/games/{gameId}/players app endpoint
+    // subscription must be done first, to update the players list with own name
     useEffect(() => {
-        let socket = new SockJS("http://localhost:8080/sopra-websocket");
-        const client = Stomp.over(socket);
-        setUsername("test");
-        setStompClient(client);
-        console.log("Connecting to websocket...");
-        client.connect({}, () => {
-            console.log("Connected to websocket");
-            client.subscribe(
-                `/topic/games/${gameId}/players`,
-                (message) => {
-                    console.log(`Message received: ${message.body}`);
-                }
-            );
-            client.send(
-                "/app/games/" + gameId + "/players",
-                {},
-                JSON.stringify({username})
-            );
-        });
+        async function connectSocket() {
+            let socket = new SockJS("http://localhost:8080/sopra-websocket");
+            const client = Stomp.over(socket);
+            setStompClient(client);
+
+            client.connect({}, () => {
+                client.subscribe(
+                    `/topic/games/${gameId}/players`,
+                    (message) => {
+                        setPlayers(JSON.parse(message.body));
+                    }
+                );
+                client.send(
+                    `/app/games/${gameId}/players`,
+                    {},
+                    JSON.stringify({username})
+                )
+            });
+        }
+        connectSocket();
     }, []);
 
 
@@ -89,6 +91,7 @@ const TestLobby = () => {
               width={"100vw"}
               height={"100vh"}
               direction={"column"}
+              alignItems={"center"}
         >
         <Typography variant={"h1"} color={"secondary"}>
             Test Lobby
@@ -98,12 +101,6 @@ const TestLobby = () => {
                     <CardContent>
                         {content}
                     </CardContent>
-                    <CardActions>
-                        <Button variant={"contained"} color={"primary"} onClick={doSend}>
-                            send
-                        </Button>
-                        <TextField onChange={changeUsername}/>
-                    </CardActions>
                 </Card>
             </Grid>
         </Grid>
