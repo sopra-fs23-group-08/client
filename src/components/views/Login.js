@@ -41,9 +41,7 @@ const Login = props => {
     */
   };
 
-  const playAsGuest =  () => {
-    const guestToken = "guest" + crypto.randomUUID();
-    localStorage.setItem("token", guestToken);
+  const playAsGuest =  async () => {
     history.push(`/home`);
   }
 

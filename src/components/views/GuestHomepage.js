@@ -11,12 +11,13 @@ import {
     Tooltip, Dialog, DialogTitle, DialogContent, TextField, DialogActions
 } from "@material-ui/core";
 import {makeStyles} from "@material-ui/core/styles";
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import SearchIcon from '@material-ui/icons/Search';
 import VideogameAssetIcon from '@material-ui/icons/VideogameAsset';
 import InputIcon from '@material-ui/icons/Input';
 import HowToPlay from "../ui/HowToPlay";
 import {api} from "../../helpers/api";
+import User from "../../models/User";
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -53,21 +54,38 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 
-const GuestHomepage = props => {
+// differences to HomePage.js:
+// - no view profile option
+// - creates placeholder user object
+// - sets guest token in localstorage on first mount
+const GuestHomepage = () => {
 
     const classes = useStyles();
     const history = useHistory();
     const [dialogOpen, setDialogOpen] = useState(false);
     const [LobbyID, setLobbyID] = useState([""]);
+    const [user, setUser] = useState(new User());
+
+    useEffect(() => {
+        // creates a username like guest234, numbers are random (might lead to duplicates)
+        user.username = "guest" + Math.floor(Math.random()*1000);
+        user.token = "guest" + crypto.randomUUID();
+        localStorage.setItem("token", user.token);
+
+    }, []);
 
     const createGame = async () => {
         console.log("Creating game...");
-        const response = await api.post("/games");
-        history.push(`/games/${response.data.id}/lobby`)
+
+        // create game with placeholder GuestUser as host, pass user object to lobby
+        const response = await api.post("/games", JSON.stringify({user}));
+        history.push(`/games/${response.data.id}/lobby`, {user: user});
     }
 
     const joinLobby = () => {
-        history.push(`/games/${LobbyID}/lobby`)
+        console.log("Joining lobby...");
+
+        history.push(`/games/${LobbyID}/lobby`, {user: user})
     }
 
     const handleLobbyIDChange = (e) => {setLobbyID(e.target.value)}

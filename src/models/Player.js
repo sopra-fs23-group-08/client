@@ -6,7 +6,7 @@ import User from "./User";
 class Player extends User{
     constructor(data = {}) {
         super();
-        this.points = null;
+        this.score = 0;
         this.lastAction = null;
         this.currentRole = null;
         Object.assign(this, data);

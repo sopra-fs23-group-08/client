@@ -2,14 +2,53 @@ import {Button, Card, CardActions, CardContent, Grid, TextField, Typography} fro
 import {useEffect, useState} from "react";
 import {getDomain} from "../../helpers/getDomain";
 import Stomp from "stompjs";
-import {useParams} from "react-router-dom";
+import {useLocation, useParams} from "react-router-dom";
 import SockJS from "sockjs-client";
 import {api} from "../../helpers/api";
 import PropTypes from "prop-types";
 
+const PlayerList = (props) => {
+
+    return (
+        <Grid container
+              width={"100vw"}
+              height={"100vh"}
+              direction={"column"}
+              justifyContent={"center"}
+              alignItems={"center"}
+              spacing={2}
+        >
+            {props.list.map((player, index) => {
+                return (
+                    <Grid item key={index}>
+                        <Card>
+                            <CardContent>
+                                <Typography variant={"h6"}>
+                                    {player.username}
+                                </Typography>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                )
+            })}
+        </Grid>
+    )
+}
+
+PlayerList.propTypes = {
+    list: PropTypes.array
+}
+
 const TestLobby = () => {
+
+    // GuestUser is created in GuestHomepage, and passed to this component via the location state
+    // TODO: Send user to WS endpoint on initial mount to update user list
+    // TODO: Refactor the code receiving the player list from the WS endpoint; now receives a list of DTOs, not strings
+    // TODO: enjoy a working lobby? for the love of god, please work this time :(
+    // TODO: disconnect from WS endpoint on unmount and send disconnect message to WS endpoint
+    const location = useLocation();
+    const [user, setUser] = useState(location.state.user);
     const [players, setPlayers] = useState([]);
-    const [username, setUsername] = useState("test"+Math.floor(Math.random()*1000));
     const { gameId } = useParams();
 
     const [stompClient, setStompClient] = useState(null);
@@ -18,38 +57,6 @@ const TestLobby = () => {
     // subscribe to setting updates
     const [settingsSubscription, setSettingsSubscription] = useState(null);
 
-    const PlayerList = (props) => {
-
-        return (
-            <Grid container
-                  width={"100vw"}
-                  height={"100vh"}
-                  direction={"column"}
-                  justifyContent={"center"}
-                  alignItems={"center"}
-                  spacing={2}
-            >
-                {props.list.map((player) => {
-                    return (
-                        <Grid item key={players.indexOf(player)}>
-                            <Card>
-                                <CardContent>
-                                    <Typography variant={"h6"}>
-                                        {player.username}
-                                    </Typography>
-                                </CardContent>
-                            </Card>
-                        </Grid>
-                    )
-                })}
-            </Grid>
-        )
-    }
-
-    PlayerList.propTypes = {
-        list: PropTypes.array
-    }
-    // TODO: for some reason the player list is not updated when the players change
     // re-render PlayersList when players change
     let content = <PlayerList list={players}/>;
 
@@ -69,16 +76,22 @@ const TestLobby = () => {
             setStompClient(client);
 
             client.connect({}, () => {
+                console.log("connected to websocket");
                 client.subscribe(
                     `/topic/games/${gameId}/players`,
                     (message) => {
                         setPlayers(JSON.parse(message.body));
+                        console.log(message.body);
                     }
                 );
+                const username = user.username;
+                const score = 0;
+                const token = localStorage.getItem("token");
+                const requestBody = JSON.stringify({username, score, token});
                 client.send(
                     `/app/games/${gameId}/players`,
                     {},
-                    JSON.stringify({username})
+                    requestBody
                 )
             });
         }

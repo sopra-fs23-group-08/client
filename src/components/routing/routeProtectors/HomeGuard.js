@@ -2,17 +2,22 @@
 
 import PropTypes from "prop-types";
 import GuestHomepage from "components/views/GuestHomepage";
+import {useLocation} from "react-router-dom";
+import User from "../../../models/User";
 
 /**
  * returns the children if the user is logged in, otherwise redirects to GuestHomepage
  */
+
 export const HomeGuard = props => {
 
     // if user is registered, render children
     const token = localStorage.getItem("token");
+
     if (token && token.slice(0, 5) !== "guest") {
         return props.children;
     }
+
     // if user is guest, render GuestHomepage
     return <GuestHomepage/>;
 };
