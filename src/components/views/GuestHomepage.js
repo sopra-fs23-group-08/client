@@ -7,14 +7,17 @@ import {
     Toolbar,
     Avatar,
     IconButton,
-    Tooltip
+    Button,
+    Tooltip, Dialog, DialogTitle, DialogContent, TextField, DialogActions
 } from "@material-ui/core";
 import {makeStyles} from "@material-ui/core/styles";
-import React from "react";
+import React, {useEffect, useState} from "react";
 import SearchIcon from '@material-ui/icons/Search';
 import VideogameAssetIcon from '@material-ui/icons/VideogameAsset';
 import InputIcon from '@material-ui/icons/Input';
 import HowToPlay from "../ui/HowToPlay";
+import {api} from "../../helpers/api";
+import User from "../../models/User";
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -49,10 +52,47 @@ const useStyles = makeStyles((theme) => ({
     }
 
 }));
-const GuestHomepage = props => {
+
+
+// differences to HomePage.js:
+// - no view profile option
+// - creates placeholder user object
+// - sets guest token in localstorage on first mount
+const GuestHomepage = () => {
 
     const classes = useStyles();
     const history = useHistory();
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [LobbyID, setLobbyID] = useState([""]);
+    const [user, setUser] = useState(new User());
+
+    useEffect(() => {
+        // creates a username like guest234, numbers are random (might lead to duplicates)
+        user.username = "guest" + Math.floor(Math.random()*1000);
+        user.token = "guest" + crypto.randomUUID();
+        localStorage.setItem("token", user.token);
+
+    }, []);
+
+    const createGame = async () => {
+        console.log("Creating game...");
+
+        // create game with placeholder GuestUser as host, pass user object to lobby
+        const response = await api.post("/games", JSON.stringify({user}));
+        history.push(`/games/${response.data.id}/lobby`, {user: user});
+    }
+
+    const joinLobby = () => {
+        console.log("Joining lobby...");
+
+        history.push(`/games/${LobbyID}/lobby`, {user: user})
+    }
+
+    const handleLobbyIDChange = (e) => {setLobbyID(e.target.value)}
+
+    const toggleDialog = () => {
+        setDialogOpen(!dialogOpen);
+    }
 
     return (
         <Grid container
@@ -81,21 +121,39 @@ const GuestHomepage = props => {
                     <Grid container
                           className={classes.cardContainer}
                     >
-                        <Grid Item>
+                        <Grid item>
                             <Tooltip title={'Join Game'}>
-                                <IconButton onClick={() => {}}>
+                                <IconButton onClick={toggleDialog}>
                                     <InputIcon className={classes.menuIcon}/>
                                 </IconButton>
                             </Tooltip>
+                            <Dialog open={dialogOpen} onClose={toggleDialog}>
+                                <DialogTitle>
+                                    Join Game
+                                </DialogTitle>
+                                <DialogContent>
+                                    <TextField label={"Enter Lobby ID"}
+                                               onChange={handleLobbyIDChange}
+                                    />
+                                </DialogContent>
+                                <DialogActions>
+                                    <Button onClick={toggleDialog}>
+                                        Cancel
+                                    </Button>
+                                    <Button onClick={joinLobby}>
+                                        Join
+                                    </Button>
+                                </DialogActions>
+                            </Dialog>
                         </Grid>
-                        <Grid Item>
+                        <Grid item>
                             <Tooltip title={'Create Game'}>
-                                <IconButton onClick={() => {}}>
+                                <IconButton onClick={() => {createGame()}}>
                                     <VideogameAssetIcon className={classes.menuIcon}/>
                                 </IconButton>
                             </Tooltip>
                         </Grid>
-                        <Grid Item>
+                        <Grid item>
                             <Tooltip title={'Search Player'}>
                                 <IconButton onClick={() => history.push("/users/search")}>
                                     <SearchIcon className={classes.menuIcon}/>

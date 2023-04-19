@@ -41,6 +41,10 @@ const Login = props => {
     */
   };
 
+  const playAsGuest =  async () => {
+    history.push(`/home`);
+  }
+
   return (
     <BaseContainer>
       <BaseBox>
@@ -72,7 +76,7 @@ const Login = props => {
             </div>
             <Button
                 margin="auto"
-                onClick={() => history.push(`/home`)}
+                onClick={() => playAsGuest()}
             >
               Play as guest
             </Button>

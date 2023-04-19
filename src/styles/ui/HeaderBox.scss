@@ -1,0 +1,15 @@
+@import 'src/styles/theme';
+
+.header-box {
+    display: flex;
+    align-items: center;
+    background-color: $white;
+    height: 100px;
+    max-height: 15vh;
+    min-height: 15vh;
+    width: $BASE_BOX_WIDTH;
+    max-width: 90vw;
+    border-radius: 50px 50px 0 0;
+    position: relative;
+    top: 0;
+}
