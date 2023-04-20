@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Stomp from 'stompjs';
@@ -365,3 +366,5 @@ const Game = () => {
   };
 
 export default Game;
+=======
+>>>>>>> 1fd1add094ac44754a5c304c76a0f4fad01214a4
