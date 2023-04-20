@@ -20,7 +20,8 @@
     "test": "react-scripts test --env=jsdom"
   },
   "eslintConfig": {
-    "extends": "react-app"
+    "extends": "react-app",
+    "allowImportExportEverywhere": true
   },
   "browserslist": [
     ">0.2%",
