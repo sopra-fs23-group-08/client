@@ -9,6 +9,11 @@ export const LoginGuard = props => {
   if (!localStorage.getItem("token")) {
     return props.children;
   }
+  if (localStorage.getItem("token").slice(0, 5) === "guest") {
+    localStorage.removeItem("token");
+    return props.children;
+  }
+
   // if user is already logged in, redirects to the main /app
   return <Redirect to="/home"/>;
 };

@@ -2,26 +2,28 @@
 
 import PropTypes from "prop-types";
 import GuestHomepage from "components/views/GuestHomepage";
-import {useLocation} from "react-router-dom";
-import User from "../../../models/User";
 
 /**
- * returns the children if the user is logged in, otherwise redirects to GuestHomepage
+ * returns the children if the user is registered, otherwise redirects to GuestHomepage
  */
 
-export const HomeGuard = props => {
+const HomeGuard = props => {
 
-    // if user is registered, render children
+    // to pass guestUser from Login to GuestHomepage
     const token = localStorage.getItem("token");
 
+    // if user is registered (no "guest" token), render children
+    // TODO: figure out how to pass registered users ID to homepage
     if (token && token.slice(0, 5) !== "guest") {
         return props.children;
     }
 
-    // if user is guest, render GuestHomepage
+    // if user is guest, redirect to GuestHomepage
     return <GuestHomepage/>;
 };
 
 HomeGuard.propTypes = {
     children: PropTypes.node
 }
+
+export default HomeGuard;

@@ -1,6 +1,4 @@
 import React, {useState} from 'react';
-import {api, handleError} from 'helpers/api';
-import User from 'models/User';
 import {useHistory} from 'react-router-dom';
 import {Button} from 'components/ui/Button';
 import 'styles/views/Login.scss';
@@ -8,6 +6,7 @@ import BaseContainer from "components/ui/BaseContainer";
 import {BaseBox} from "../ui/BaseBox";
 import {Input} from "../ui/Input";
 import logo from "../../styles/assets/logo.png";
+import {Dialog, DialogTitle, DialogActions, DialogContent, TextField} from "@material-ui/core";
 
 /*
 It is possible to add multiple components inside a single file,
@@ -16,10 +15,12 @@ As a rule of thumb, use one file per component and only add small,
 specific components that belong to the main one in the same file.
  */
 
-const Login = props => {
+const Login = () => {
   const history = useHistory();
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [guestUsername, setGuestUsername] = useState("");
 
   const doLogin = async () => {
     /*
@@ -41,7 +42,19 @@ const Login = props => {
     */
   };
 
-  const playAsGuest =  async () => {
+  const toggleDialog = () => {
+    setDialogOpen(!dialogOpen);
+  }
+
+  // create token, store it, pass guestUser as location state in history.push
+  const playAsGuest = () => {
+    const username = guestUsername;
+    const token = "guest" + crypto.randomUUID();
+
+    // TODO figure out if the token is even needed
+    localStorage.setItem("token", token);
+    localStorage.setItem("guestUsername", username);
+
     history.push(`/home`);
   }
 
@@ -76,10 +89,29 @@ const Login = props => {
             </div>
             <Button
                 margin="auto"
-                onClick={() => playAsGuest()}
+                onClick={() => toggleDialog()}
             >
               Play as guest
             </Button>
+            <Dialog open={dialogOpen} onClose={toggleDialog}>
+              <DialogTitle>
+                Join Game
+              </DialogTitle>
+              <DialogContent>
+                <TextField label={"Enter a username"}
+                           onChange={e => setGuestUsername(e.target.value)}
+                />
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={toggleDialog}>
+                  Cancel
+                </Button>
+                <Button onClick={playAsGuest}>
+                  Confirm
+                </Button>
+              </DialogActions>
+            </Dialog>
+
           </div>
           <div className="login graphics">
             <img
