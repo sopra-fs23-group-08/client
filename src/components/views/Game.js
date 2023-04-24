@@ -17,6 +17,7 @@ import {
 import { makeStyles } from "@material-ui/core/styles";
 import LeaveIcon from "@material-ui/icons/ExitToApp";
 import HelpIcon from "@material-ui/icons/Help";
+import PlayArrowIcon from "@material-ui/icons/PlayArrow";
 import HowToPlay from 'components/ui/HowToPlay';
 import EndOfGame from 'components/ui/EndofGame';
 
@@ -72,6 +73,7 @@ const Game = () => {
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [showEndOfGame, setEndOfGame] = useState(false);
   const [showShowDown, setShowShowDown] = useState(false);
+  const [comments, setComments] = useState([]);
 
   const [bigBlind, setBigBlind] = useState(0);
   const [smallBlind, setSmallBlind] = useState(0);
@@ -162,9 +164,16 @@ const Game = () => {
       };
     }, [stompClient, location.pathname]);
 
-  
-      // update video
-      const handleVideoUpdate = (message) => {
+   return () => {
+      if (stomp) {
+        stomp.disconnect();
+      }
+    };
+  }, [location.pathname]);
+
+
+       // update video
+       const handleVideoUpdate = (message) => {
         const data = JSON.parse(message.body);
         setVideoData({
           title: data.title,
@@ -209,11 +218,13 @@ const Game = () => {
         });
         setComments(commentsData);
       };
+
       
       //decision button: raise, call
       //send to: games/game_id/players/player_id/decision
       //and then update to: games/game_id/state/general
       const handleDecisionSubmit = () => {
+        const gameId = location.pathname.split('/')[2];
         let decisionValue;
         if (decision === 'raise') {
           decisionValue = parseInt(callAmount);
@@ -242,14 +253,6 @@ const Game = () => {
         setShowHowToPlay(true);
       };
       
-
-    return () => {
-      if (stomp) {
-        stomp.disconnect();
-      }
-    };
-  }, [location.pathname]);
-
 
     return (
       <div className={classes.root}>
