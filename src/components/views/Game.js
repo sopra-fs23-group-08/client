@@ -1,8 +1,8 @@
-<<<<<<< HEAD
+
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Stomp from 'stompjs';
-import HowToPlay from '../components/ui/HowToPlay';
+
 import {
   Grid,
   Card,
@@ -12,12 +12,13 @@ import {
   Typography,
   TextField,
   IconButton,
-  LinearProgress, // for video but haven't used
 } from "@material-ui/core";
+
 import { makeStyles } from "@material-ui/core/styles";
 import LeaveIcon from "@material-ui/icons/ExitToApp";
 import HelpIcon from "@material-ui/icons/Help";
-import EndOfGame from "./EndOfGame";
+import HowToPlay from 'components/ui/HowToPlay';
+import EndOfGame from 'components/ui/EndofGame';
 
 // styles
 const useStyles = makeStyles((theme) => ({
@@ -67,16 +68,15 @@ const Game = () => {
   const [pot, setPot] = useState(0);
   const [callAmount, setCallAmount] = useState(0);
   const [myHand, setMyHand] = useState([]);
-  const [decision, setDecision] = useState('fold');  //?
-  const [showHelp, setShowHelp] = useState(false);
-  const [showEndOfRound, setShowEndOfRound] = useState(false);
-  const [showDown, setShowDown] = useState([]);
+  const [decision, setDecision] = useState('fold');//?
+  const [showHowToPlay, setShowHowToPlay] = useState(false);
+  const [showEndOfGame, setEndOfGame] = useState(false);
+  const [showShowDown, setShowShowDown] = useState(false);
 
   const [bigBlind, setBigBlind] = useState(0);
   const [smallBlind, setSmallBlind] = useState(0);
 
   const classes = useStyles();
-
 
   // define state variables for video data
   const [videoData, setVideoData] = useState({
@@ -99,7 +99,7 @@ const Game = () => {
 
     // set up stomp.subscribe channels
     stomp.connect({}, () => {
-      
+          
       // video, subscribe: topic/games/{gameId}/state/video, to get video data
       stomp.subscribe(`/topic/games/${gameId}/state/video`, (message) => {
         const data = JSON.parse(message.body);
@@ -150,7 +150,6 @@ const Game = () => {
         setPlayerList(players);
       });
       
-      const gameId = location.pathname.split('/')[2];
       const videoSubscription = stompClient.subscribe(
         `/games/${gameId}/state/video`,
         (message) => {
@@ -162,6 +161,7 @@ const Game = () => {
         videoSubscription.unsubscribe();
       };
     }, [stompClient, location.pathname]);
+
   
       // update video
       const handleVideoUpdate = (message) => {
@@ -238,10 +238,10 @@ const Game = () => {
       };
   
   
-      // help button, render How to Play
-      const handleHelpButton = () => {
-        setShowHelp(true);
+      const handleHowToPlayClick = () => {
+        setShowHowToPlay(true);
       };
+      
 
     return () => {
       if (stomp) {
@@ -354,7 +354,7 @@ const Game = () => {
                 <IconButton onClick={handleLeaveGame}>
                   <LeaveIcon />
                 </IconButton>
-                <IconButton onClick={handleHelpButton}>
+                <IconButton onClick={handleHowToPlayClick}>
                   <HelpIcon />
                 </IconButton>
               </CardActions>
@@ -366,5 +366,4 @@ const Game = () => {
   };
 
 export default Game;
-=======
->>>>>>> 1fd1add094ac44754a5c304c76a0f4fad01214a4
+
