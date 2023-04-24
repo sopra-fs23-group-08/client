@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 import "styles/index.scss";
 import App from "App";
 import Game from "components/views/Game";
+import 'styles/views/Global.css';
 
 /**
  * This is the entry point of your React application where the root element is in the public/index.html.
@@ -11,9 +12,10 @@ import Game from "components/views/Game";
  * More: https://reactjs.org/docs/rendering-elements.html
  */
 ReactDOM.render(<App />, document.getElementById("root"));
-ReactDOM.render(
-    <React.StrictMode>
-      <Game />
-    </React.StrictMode>,
-    document.getElementById('root')
-  );
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+  <React.StrictMode>
+    <Game />
+  </React.StrictMode>
+);

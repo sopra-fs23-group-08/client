@@ -21,6 +21,7 @@ import PlayArrowIcon from "@material-ui/icons/PlayArrow";
 import HowToPlay from 'components/ui/HowToPlay';
 import EndOfGame from 'components/ui/EndofGame';
 
+
 // styles
 const useStyles = makeStyles((theme) => ({
   root: {
