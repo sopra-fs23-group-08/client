@@ -1,7 +1,7 @@
 import {BrowserRouter, Redirect, Route, Switch} from "react-router-dom";
 import GameRouter from "components/routing/routers/GameRouter";
 import {LoginGuard} from "components/routing/routeProtectors/LoginGuard";
-import {HomeGuard} from "components/routing/routeProtectors/HomeGuard";
+import HomeGuard from "components/routing/routeProtectors/HomeGuard";
 import Login from "components/views/Login";
 import Profile from "components/views/Profile";
 import EditProfile from "components/views/EditProfile";
