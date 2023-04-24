@@ -1,4 +1,4 @@
-import {useHistory} from "react-router-dom";
+import {useHistory, useLocation} from "react-router-dom";
 import {
     Grid,
     Card,
@@ -65,26 +65,24 @@ const GuestHomepage = () => {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [LobbyID, setLobbyID] = useState([""]);
     const [user, setUser] = useState(new User());
-
-    useEffect(() => {
-        // creates a username like guest234, numbers are random (might lead to duplicates)
-        user.username = "guest" + Math.floor(Math.random()*1000);
-        user.token = "guest" + crypto.randomUUID();
-        localStorage.setItem("token", user.token);
-
-    }, []);
+    user.username = localStorage.getItem("guestUsername");
+    user.token = localStorage.getItem("guestToken");
 
     const createGame = async () => {
         console.log("Creating game...");
 
         // create game with placeholder GuestUser as host, pass user object to lobby
         const response = await api.post("/games", JSON.stringify({user}));
+
+        // Here we use location.state to pass the user object to the lobby
+        // up until here we used localStorage to store the user object
+        // might want to change this to be consistent
         history.push(`/games/${response.data.id}/lobby`, {user: user});
     }
 
     const joinLobby = () => {
         console.log("Joining lobby...");
-
+        // TODO check if lobby exists/is full
         history.push(`/games/${LobbyID}/lobby`, {user: user})
     }
 
@@ -109,10 +107,10 @@ const GuestHomepage = () => {
                             className={classes.cardBar}
                         >
                             <Avatar className={classes.headerAvatar}>
-                                G
+                                {user.username.charAt(0)}
                             </Avatar>
                             <Typography className={classes.headerTitle}>
-                                Playing as Guest
+                                Playing as {user.username}
                             </Typography>
                             <HowToPlay/>
                         </Toolbar>
