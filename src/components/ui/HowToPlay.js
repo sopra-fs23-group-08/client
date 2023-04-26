@@ -15,6 +15,10 @@ import PropTypes from "prop-types";
 
 
 const HowToPlay = (props) => {
+  
+  HowToPlay.propTypes = {
+    color: PropTypes.string
+  }
   const [open, setOpen] = useState(false);
 
   const handleClickOpen = () => {
@@ -109,8 +113,5 @@ const HowToPlay = (props) => {
   );
 };
 
-HowToPlay.propTypes = {
-  color: PropTypes.string
-}
 
 export default HowToPlay;

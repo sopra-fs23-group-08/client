@@ -7,9 +7,9 @@ import Profile from "components/views/Profile";
 import EditProfile from "components/views/EditProfile";
 import Homepage from "components/views/Homepage";
 import Search from "components/views/Search";
-import Lobby from "components/views/Lobby";
 import Register from "../../views/Register";
 import TestLobby from "../../views/TestLobby";
+import Game from "../../views/Game";
 
 /**
  * Main router of your application.
@@ -37,7 +37,7 @@ const AppRouter = () => {
           <TestLobby/>
         </Route>
         <Route path="/games/:gameId">
-          <GameRouter base="/games:gameId"/>
+          <Game/>
         </Route>
         <Route path="/home">
           <HomeGuard>

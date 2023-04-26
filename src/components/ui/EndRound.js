@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, Button } from 'antd';
-
+import Modal from 'antd/lib/modal/Modal';
 // 1. show after each round
 
 // 2. display the winner of this round, tell all players that current round ends, next round will begin
@@ -11,7 +10,7 @@ import { Modal, Button } from 'antd';
 
 // 5. then all players will be back to game interface
 
-const EndOfRound = ({ winner, roundNumber }) => {
+const EndOfGame = ({ winner, roundNumber }) => {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
@@ -38,4 +37,4 @@ const EndOfRound = ({ winner, roundNumber }) => {
   );
 };
 
-export default EndOfRound;
+export default EndOfGame;
