@@ -41,6 +41,8 @@ const Game = () => {
   const [bigBlind, setBigBlind] = useState(0);
   const [smallBlind, setSmallBlind] = useState(0);
 
+  const heartIcons = document.querySelectorAll('.card-top i');
+
   // define state variables for video data
   const [videoData, setVideoData] = useState({
     title: "",
@@ -214,6 +216,12 @@ const Game = () => {
         setShowHowToPlay(true);
       };
       
+      heartIcons.forEach((icon) => {
+        icon.addEventListener('click', (event) => {
+          event.target.classList.toggle('liked');
+        });
+      });
+      
   return (
     <body>
       <div className="box">
@@ -251,25 +259,24 @@ const Game = () => {
         </div>
   
         <div className="center">
-          <div className="title">
-            Title of the Video
-          </div>
+          <div className="title">{videoData.title}</div>
           <div className="video-container">
-            <div className="thumbnail"></div>
+            <div className="thumbnail" style={{ backgroundImage: `url(${videoData.thumbnail})` }}></div>
           </div>
           <div className="stats">
-            <p>Date: 2022.04.31</p>
-            <p>Likes: 30348834</p>
-            <p>Views: 2348230503</p>
+            <p>Date: {videoData.releaseDate}</p>
+            <p>Likes: {videoData.likes}</p>
+            <p>Views: {videoData.views}</p>
           </div>
-        </div>
+      </div>
+
   
   
       <div className="right">
         <div className="round-number">Round 4</div>
         <div className="pot-amount">pot: 13000</div>
         <div className="input-amount">
-          <input type="text" placeholder="Amount" />
+          <input className="input-amount" type="number" placeholder="Enter amount..." />
         </div>
         <div className="button-container">
           <button className="call-button">call</button>
