@@ -9,7 +9,7 @@ import Homepage from "components/views/Homepage";
 import Search from "components/views/Search";
 import Register from "../../views/Register";
 import TestLobby from "../../views/TestLobby";
-
+import Game from "../../views/Game";
 
 /**
  * Main router of your application.
@@ -37,7 +37,7 @@ const AppRouter = () => {
           <TestLobby/>
         </Route>
         <Route path="/games/:gameId">
-          <GameRouter/>
+          <Game/>
         </Route>
         <Route path="/home">
           <HomeGuard>

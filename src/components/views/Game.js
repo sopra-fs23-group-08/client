@@ -1,7 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Stomp from 'stompjs';
+import 'styles/views/TestGame.scss';
 
 import {
   Grid,
@@ -22,44 +22,6 @@ import HowToPlay from 'components/ui/HowToPlay';
 import EndOfGame from 'components/ui/EndofGame';
 
 
-// styles
-const useStyles = makeStyles((theme) => ({
-  root: {
-    flexGrow: 1,
-  },
-  card: {
-    margin: theme.spacing(1),
-    textAlign: "center",
-  },
-  video: {
-    backgroundColor: "red",
-    width: "100%",
-    height: "0",
-    paddingBottom: "56.25%", // 16:9 aspect ratio
-    position: "relative",
-    overflow: "hidden",
-  },
-  thumbnail: {
-    position: "absolute",
-    width: "100%",
-    height: "100%",
-    left: "0",
-    top: "0",
-  },
-  playerButton: {
-    width: "100%",
-    marginBottom: theme.spacing(1),
-  },
-  callButton: {
-    marginTop: theme.spacing(2),
-    width: "100%",
-  },
-  raiseButton: {
-    marginTop: theme.spacing(1),
-    width: "100%",
-  },
-}));
-
 
 const Game = () => {
   const location = useLocation();
@@ -78,8 +40,6 @@ const Game = () => {
 
   const [bigBlind, setBigBlind] = useState(0);
   const [smallBlind, setSmallBlind] = useState(0);
-
-  const classes = useStyles();
 
   // define state variables for video data
   const [videoData, setVideoData] = useState({
@@ -254,120 +214,144 @@ const Game = () => {
         setShowHowToPlay(true);
       };
       
-
-    return (
-      <div className={classes.root}>
-        <Grid container spacing={1}>
-          {/* Player list */}
-          <Grid item xs={2}>
-            <Card className={classes.card}>
-              <CardContent>
-                {playerList.map((player, index) => (
-                  <Button
-                    key={index}
-                    className={classes.playerButton}
-                    variant="contained"
-                    color="primary"
-                  >
-                    <Typography variant="subtitle1">{player.username}</Typography>
-                    <Typography variant="body2">
-                      {player.decision} {player.callAmount}
-                    </Typography>
-                  </Button>
-                ))}
-              </CardContent>
-            </Card>
-          </Grid>
-    
-          {/* Video */}
-          <Grid item xs={8}>
-            <Card className={classes.card}>
-              <CardContent>
-                <div className={classes.video}>
-                  <img
-                    className={classes.thumbnail}
-                    src={video.thumbnail}
-                    alt="Video thumbnail"
-                  />
-                </div>
-                <Typography variant="h6">{video.title}</Typography>
-                <Typography variant="caption">
-                  {video.releaseDate} &#8226; {video.likes} likes &#8226; {video.views} views
-                </Typography>
-                <div>
-                  <progress value="0" max={video.length}></progress>
-                </div>
-                <Button variant="contained" color="primary" startIcon={<PlayArrowIcon />}>
-                  Play
-                </Button>
-              </CardContent>
-            </Card>
-          </Grid>
-    
-          {/* My hand */}
-          <Grid item xs={12}>
-            <Card className={classes.card}>
-              <CardContent>
-                <Grid container spacing={1}>
-                  {myHand.map((comment, index) => (
-                    <Grid key={index} item xs={3}>
-                      <Card>
-                        <CardContent>
-                          <Typography variant="body2">{comment.content}</Typography>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                  ))}
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-    
-          {/* Game info */}
-          <Grid item xs={2}>
-            <Card className={classes.card}>
-              <CardContent>
-                <Typography variant="h6">Round {gamePhase}</Typography>
-                <Typography variant="h5">Pot: {pot}</Typography>
-                <Typography variant="h6">Amount:</Typography>
-                <TextField
-                  variant="outlined"
-                  fullWidth
-                  type="number"
-                  value={callAmount}
-                  onChange={(e) => setCallAmount(e.target.value)}
-                />
-                <Button
-                  className={classes.callButton}
-                  variant="contained"
-                  color="primary"
-                  onClick={handleDecisionSubmit}
-                >
-                  Call
-                </Button>
-                <Button
-                  className={classes.raiseButton}
-                  variant="contained"
-                  color="secondary"
-                  onClick={handleDecisionSubmit}
-                >
-                  Raise
-                </Button>
-              </CardContent>
-              <CardActions>
-                <IconButton onClick={handleLeaveGame}>
-                  <LeaveIcon />
-                </IconButton>
-                <IconButton onClick={handleHowToPlayClick}>
-                  <HelpIcon />
-                </IconButton>
-              </CardActions>
-            </Card>
-          </Grid>
-        </Grid>
+  return (
+    <body>
+      <div className="box">
+        <div className="left">
+          <ul className="player-list">
+            <li>
+              <a href="/users/user1">PlayerUsername</a>
+              Called 100 points, has 1000 points now
+            </li>
+            <li>
+              <a href="/users/user2">PlayerUsername</a>
+              Called 100 points, has 1000 points now
+            </li>
+            <li>
+              <a href="/users/user3">PlayerUsername</a>
+              Called 100 points, has 1000 points now
+            </li>
+            <li>
+              <a href="/users/user4">PlayerUsername</a>
+              Called 100 points, has 1000 points now
+            </li>
+            <li>
+              <a href="/users/user5">PlayerUsername</a>
+              Called 100 points, has 1000 points now
+            </li>
+            <li>
+              <a href="/users/user6">PlayerUsername</a>
+              Called 100 points, has 1000 points now
+            </li>
+            <li>
+              <a href="/users/user7">PlayerUsername</a>
+              Called 100 points, has 1000 points now
+            </li>
+          </ul> 
+        </div>
+  
+        <div className="center">
+          <div className="title">
+            Title of the Video
+          </div>
+          <div className="video-container">
+            <div className="thumbnail"></div>
+          </div>
+          <div className="stats">
+            <p>Date: 2022.04.31</p>
+            <p>Likes: 30348834</p>
+            <p>Views: 2348230503</p>
+          </div>
+        </div>
+  
+  
+      <div className="right">
+        <div className="round-number">Round 4</div>
+        <div className="pot-amount">pot: 13000</div>
+        <div className="input-amount">
+          <input type="text" placeholder="Amount" />
+        </div>
+        <div className="button-container">
+          <button className="call-button">call</button>
+          <button className="raise-button">raise</button>
+          <button className="left-button">leave</button>
+          <button className="help-button">help</button>
+        </div>
       </div>
-    );
-  };
+  
+        <div className="footer">
+          <div className="card-container">
+            <div className="card">
+              <div className="card-top">
+                <span>MyUsername</span>
+                <i className="fas fa-heart"></i>
+              </div>
+              <div className="card-main">
+                This is comment content. This is comment content. This is comment content.
+              </div>
+            </div>
+            <div className="card">
+              <div className="card-top">
+                <span>MyUsername</span>
+                <i className="fas fa-heart"></i>
+              </div>
+              <div className="card-main">
+                This is comment content. This is comment content. This is comment content.
+              </div>
+            </div>
+            <div className="card">
+              <div className="card-top">
+                <span>MyUsername</span>
+                <i className="fas fa-heart"></i>
+              </div>
+              <div className="card-main">
+                This is comment content. This is comment content. This is comment content.
+              </div>
+            </div>
+            <div className="card">
+              <div className="card-top">
+                <span>MyUsername</span>
+                <i className="fas fa-heart"></i>
+              </div>
+              <div className="card-main">
+                This is comment content. This is comment content. This is comment content.
+              </div>
+            </div>
+            <div className="card">
+              <div className="card-top">
+                <span>MyUsername</span>
+                <i className="fas fa-heart"></i>
+              </div>
+              <div className="card-main">
+                This is comment content. This is comment content. This is comment content.
+              </div>
+            </div>
+            <div className="card">
+              <div className="card-top">
+                <span>MyUsername</span>
+                <i className="fas fa-heart"></i>
+              </div>
+              <div className="card-main">
+                This is comment content. This is comment content. This is comment content.
+              </div>
+            </div>
+            <div className="card">
+              <div className="card-top">
+                <span>MyUsername</span>
+                <i className="fas fa-heart"></i>
+              </div>
+              <div className="card-main">
+                This is comment content. This is comment content. This is comment content.
+              </div>
+            </div>
+          </div>
+        </div>
+  
+      </div>
+    </body>
+);
+};
 
 export default Game;
-
+  
+  

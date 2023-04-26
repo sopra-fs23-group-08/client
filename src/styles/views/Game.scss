@@ -1,0 +1,268 @@
+@import 'styles/theme';
+
+/* The '&' is a shorthand for the containing element,
+  so for example a '&.user-list' inside .game will compile to
+  .game.user-list
+
+  for more information visit https://sass-lang.com/guide
+ */
+
+ /* Reset styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Base styles */
+body {
+  background-color: #222;
+  font-family: Arial, sans-serif;
+  color: #fff;
+}
+
+/* the whole container styles */
+.container {
+  max-width: 1280px;
+  height: 800px;
+  margin: 0 auto;
+}
+
+/* Left column styles */
+.player-list {
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+  border-radius: 5px;
+  padding: 20px;
+  width:200px;
+  height: 500px;
+  float: left;
+}
+/* individual player styles */
+.player-list__item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+/* player icon styles */
+.player-list__icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 50px;
+  height: 50px;
+  background-color: #ccc;
+  border-radius: 50%;
+  margin-right: 10px;
+  font-size: 20px;
+}
+
+.player-list_text{
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.player-list__username{
+  font-size: 18px;
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.player-list__action{
+  display: flex;
+  align-items: center;
+  margin-right: 10px;
+}
+
+/* Center column styles */
+.video-box {
+  background-color: pink;
+  border-radius: 5px;
+  height: 500 px;
+  margin: 0 200px;
+  padding: 20px;
+  display: flex;
+}
+/* video thumbnail styles */
+.video-thumbnail {
+  width: 400px;
+  height: 300px;
+  background-color: #fff;
+  margin-right: 20px;
+}
+/* video info styles, all the video information */
+.video-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+/* video title styles */
+.video-info__title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+/* video meta styles, such as likes, views, publich date */
+.video-info__meta {
+  display: flex;
+  align-items: center;
+}
+/* container for each meta item */
+.video-info__meta-item {
+  display: flex;
+  align-items: center;
+  margin-right: 20px;
+  font-size: 14px;
+}
+/* icon accompnay the meta data */
+.video-info__meta-item svg {
+  width: 14px;
+  height: 14px;
+  margin-right: 5px;
+  fill: #999999;
+}
+
+/* Right column styles */
+.action-box {
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+  border-radius: 5px;
+  padding: 20px;
+  width: 200px;
+  height: 500px;
+  float: right;
+}
+/* wrapper each action*/
+.action-box__item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+/* the box to display round number */
+.action-box__round {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+/* label, such as pot, amount*/
+.action-box__label {
+  font-size: 18px;
+  font-weight: bold;
+  margin-right: 10px;
+}
+/* input box for user to enter amount */
+.action-box__input {
+  padding: 10px;
+  font-size: 16px;
+  width: 100px;
+}
+/* button to submit the action */
+.action-box__button {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #000;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+
+/* Footer styles */
+.comment-box {
+  background-color: #1c3144;
+  border-radius: 5px;
+  padding: 20px;
+  width: 1280;
+  height: 150;
+  margin: 0 auto;
+}
+
+.comment-box__item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  width: 75 px;
+}
+
+.comment-box__username {
+  font-size: 18px;
+  font-weight: bold;
+  color: #fff;
+  margin-right: 10px;
+}
+
+.comment-box__content {
+  flex: 1;
+  font-size: 16px;
+  background-color: #fff;
+  padding: 10px;
+  border-radius: 5px;
+  margin-right: 10px;
+}
+
+.comment-box__fav-btn {
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  outline: none;
+  }
+  
+  .comment-box__fav-btn svg {
+  fill: #ccc;
+  height: 24px;
+  width: 24px;
+  transition: all 0.3s;
+  }
+  
+  .comment-box__fav-btn:hover svg {
+  fill: pink;
+  }
+
+  /* Media queries */
+
+@media only screen and (max-width: 768px) {
+  .player-list {
+  flex-direction: column;
+  }
+  
+  .player-list__item {
+  margin-bottom: 20px;
+  }
+  
+  .video-info__thumbnail {
+  width: 100%;
+  }
+  
+  .video-info__meta {
+  flex-direction: column;
+  align-items: flex-start;
+  }
+  
+  .video-info__meta-item {
+  margin-bottom: 10px;
+  }
+  
+  .comment-box__username {
+  font-size: 16px;
+  }
+  
+  .comment-box__content {
+  font-size: 14px;
+  }
+  
+  .comment-box__fav-btn svg {
+  height: 20px;
+  width: 20px;
+  }
+  }
+  
+  
+  
+  
+  
