@@ -189,13 +189,14 @@ const Lobby = () => {
                 const requestBody = JSON.stringify({username, score, token});
                 try {
                     client.send(
-                        `/app/games/${gameId}/players`,
+                        `/app/games/${gameId}/players/join`,
                         {},
                         requestBody
                     )
                 }
-                catch (error) {
-                    alert(`${error.response.message}`)
+                catch (error) { // if joining fails - redirect back to home
+                    alert(`Couldn't join the lobby: ${error.response.message}`)
+                    history.push("/home");
                 }
             });
         }
