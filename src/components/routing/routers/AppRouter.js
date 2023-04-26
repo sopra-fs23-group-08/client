@@ -8,7 +8,7 @@ import EditProfile from "components/views/EditProfile";
 import Homepage from "components/views/Homepage";
 import Search from "components/views/Search";
 import Register from "../../views/Register";
-import TestLobby from "../../views/TestLobby";
+import Lobby from "../../views/Lobby";
 import Game from "../../views/Game";
 
 /**
@@ -34,7 +34,7 @@ const AppRouter = () => {
           <Profile/>
         </Route>
         <Route path="/games/:gameId/lobby">
-          <TestLobby/>
+          <Lobby/>
         </Route>
         <Route path="/games/:gameId">
           <Game/>

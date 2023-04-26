@@ -1,7 +1,7 @@
 import { Redirect, Route } from "react-router-dom";
 import Game from "components/views/Game";
 import PropTypes from 'prop-types';
-import TestLobby from "../../views/TestLobby";
+import Lobby from "../../views/Lobby";
 
 const GameRouter = props => {
   /**
@@ -14,7 +14,7 @@ const GameRouter = props => {
       <Game/>
       </Route>
       <Route exact path={`${props.base}/games/:gameId/lobby`}>
-        <TestLobby/>
+        <Lobby/>
       </Route>
     </div>
   );
