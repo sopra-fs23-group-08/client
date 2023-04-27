@@ -1,6 +1,6 @@
-import Header from "components/views/Header";
 import AppRouter from "components/routing/routers/AppRouter";
-
+import {UserProvider} from "./components/contexts/UserContext";
+import {StompProvider} from "./components/contexts/StompContext";
 /**
  * Happy coding!
  * React Template by Lucas Pelloni
@@ -9,8 +9,11 @@ import AppRouter from "components/routing/routers/AppRouter";
 const App = () => {
   return (
     <div>
-      <Header height="100"/>
-      <AppRouter/>
+        <UserProvider>
+            <StompProvider>
+                <AppRouter/>
+            </StompProvider>
+        </UserProvider>
     </div>
   );
 };

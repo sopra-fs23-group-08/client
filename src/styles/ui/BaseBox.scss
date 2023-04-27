@@ -1,0 +1,17 @@
+@import "src/styles/theme";
+
+.base-box {
+  @include center;
+  font-family: $fontDefault;
+  font-size: 20px;
+
+  width: $BASE_BOX_WIDTH;
+  max-width: 90vw;
+  height: $BASE_BOX_HEIGHT;
+  max-height: 80vh;
+
+  background-color: $white;
+  border-radius: 50px;
+  box-shadow: 20px 20px 50px #00000077;
+  display: flex;
+}

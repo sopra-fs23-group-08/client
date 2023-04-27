@@ -1,8 +1,14 @@
 import {BrowserRouter, Redirect, Route, Switch} from "react-router-dom";
-import {GameGuard} from "components/routing/routeProtectors/GameGuard";
-import GameRouter from "components/routing/routers/GameRouter";
 import {LoginGuard} from "components/routing/routeProtectors/LoginGuard";
+import HomeGuard from "components/routing/routeProtectors/HomeGuard";
 import Login from "components/views/Login";
+import Profile from "components/views/Profile";
+import EditProfile from "components/views/EditProfile";
+import Homepage from "components/views/Homepage";
+import Search from "components/views/Search";
+import Register from "../../views/Register";
+import Lobby from "../../views/Lobby";
+import Game from "../../views/Game";
 
 /**
  * Main router of your application.
@@ -17,10 +23,28 @@ const AppRouter = () => {
   return (
     <BrowserRouter>
       <Switch>
-        <Route path="/game">
-          <GameGuard>
-            <GameRouter base="/game"/>
-          </GameGuard>
+        <Route path="/users/:userId/edit">
+          <EditProfile/>
+        </Route>
+        <Route exact path="/users/search">
+          <Search/>
+        </Route>
+        <Route path="/users/:userId">
+          <Profile/>
+          </Route>
+          <Route path="/games/:gameId/lobby">
+            <Lobby/>
+          </Route>
+          <Route path="/games/:gameId">
+            <Game/>
+          </Route>
+        <Route path="/home">
+          <HomeGuard>
+            <Homepage/>
+          </HomeGuard>
+        </Route>
+        <Route exact path="/register">
+          <Register/>
         </Route>
         <Route exact path="/login">
           <LoginGuard>
@@ -28,7 +52,7 @@ const AppRouter = () => {
           </LoginGuard>
         </Route>
         <Route exact path="/">
-          <Redirect to="/game"/>
+          <Redirect to="/login"/>
         </Route>
       </Switch>
     </BrowserRouter>

@@ -1,37 +1,34 @@
-/*
-  This file contains the most basic variables that control how your application will look.
- */
+/* Theme Colors */
 
-/* Theme Colors
-
-   these values control the colors of your application.
-   feel free to play around with these and see what other look you can come up with! :D
-*/
-
-$accent: #97ABFF;
+$accent: #F3D388;
+$white: #F7F7EF;
+$grey: #D5DDDC;
+$black: #181C1F;
+$background: #262632;
 $accentDark: #123597;
 $textColor: white;
-$background: #262632;
+$background-image: url("/styles/assets/background.png");
 
 /* some constants */
-
 $DESKTOP_WIDTH: 1160px;
 $SMALL_LAPTOPS_WIDTH: 970px;
 $TABLETS_WIDTH: 750px;
 $SMALL_WIDTH: 768px;
+$BASE_BOX_WIDTH: 1100px;
+$BASE_BOX_HEIGHT: 600px;
 
 /* some standard elements */
 /* fonts */
-$fontDefault: "M PLUS Rounded 1c", sans-serif;
+$fontDefault: "Roboto", sans-serif;
+// $fontDefault: "M PLUS Rounded 1c", sans-serif;
 $fontMono: "Roboto Mono", monospace;
 
 /* a standard drop shadow */
 $dropShadow: 0 0.25em 0.25em rgba(0, 0, 0, 0.25);
 
-$borderRadius: 0.75em;
+$borderRadius: 0.6em;
 
 /* mixins
-
   these allow you to create small snippets that you can insert with a one-liner in other stylesheets
   for an example, see styles/views/Login.scss
 */

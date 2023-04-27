@@ -1,10 +1,8 @@
-@import 'styles/theme';
+@import 'src/styles/theme';
 
 .base-container {
-  margin-left: auto;
-  padding-left: 15px;
-  margin-right: auto;
-  padding-right: 15px;
-  max-width: $DESKTOP_WIDTH;
+  min-width: 100vw;
+  min-height: 100vh;
   color: $textColor;
+  @include center;
 }
