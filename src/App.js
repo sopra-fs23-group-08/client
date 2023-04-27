@@ -1,5 +1,5 @@
 import AppRouter from "components/routing/routers/AppRouter";
-
+import UserContext from "./components/contexts/UserContext";
 /**
  * Happy coding!
  * React Template by Lucas Pelloni
@@ -8,7 +8,9 @@ import AppRouter from "components/routing/routers/AppRouter";
 const App = () => {
   return (
     <div>
-      <AppRouter/>
+        <UserContext>
+            <AppRouter/>
+        </UserContext>
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useContext, useState} from 'react';
 import {useHistory} from 'react-router-dom';
 import {Button} from 'components/ui/Button';
 import 'styles/views/Login.scss';
@@ -7,6 +7,8 @@ import {BaseBox} from "../ui/BaseBox";
 import {Input} from "../ui/Input";
 import logo from "../../styles/assets/logo.png";
 import {Dialog, DialogTitle, DialogActions, DialogContent, TextField} from "@material-ui/core";
+import UserContext from "../contexts/UserContext";
+import User from "../../models/User";
 
 /*
 It is possible to add multiple components inside a single file,
@@ -16,6 +18,8 @@ specific components that belong to the main one in the same file.
  */
 
 const Login = () => {
+  const { user } = useContext(UserContext);
+  const { setUser } = useContext(UserContext);
   const history = useHistory();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [username, setUsername] = useState("");
@@ -29,7 +33,7 @@ const Login = () => {
       const response = await api.post('/users', requestBody);
 
       // Get the returned user and update a new object.
-      const user = new User(response.data);
+      setUser = new User(response.data);
 
       // Store the token into the local storage.
       localStorage.setItem('token', user.token);
@@ -50,10 +54,11 @@ const Login = () => {
   const playAsGuest = () => {
     const username = guestUsername;
     const token = "guest" + crypto.randomUUID();
+    const guestUser = new User({username, token});
+    // store user to context
+    setUser(guestUser);
 
-    // TODO figure out if the token is even needed
     localStorage.setItem("token", token);
-    localStorage.setItem("guestUsername", username);
 
     history.push(`/home`);
   }
