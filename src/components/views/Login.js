@@ -18,7 +18,6 @@ specific components that belong to the main one in the same file.
  */
 
 const Login = () => {
-  const { user } = useContext(UserContext);
   const { setUser } = useContext(UserContext);
   const history = useHistory();
   const [dialogOpen, setDialogOpen] = useState(false);

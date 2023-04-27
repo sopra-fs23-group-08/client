@@ -1,5 +1,6 @@
 import AppRouter from "components/routing/routers/AppRouter";
 import {UserProvider} from "./components/contexts/UserContext";
+import {StompProvider} from "./components/contexts/StompContext";
 /**
  * Happy coding!
  * React Template by Lucas Pelloni
@@ -9,7 +10,9 @@ const App = () => {
   return (
     <div>
         <UserProvider>
-            <AppRouter/>
+            <StompProvider>
+                <AppRouter/>
+            </StompProvider>
         </UserProvider>
     </div>
   );

@@ -81,6 +81,7 @@ const GameSettings = (props) => {
                             onChange={event => props.onLanguageChange(event.target.value)}
                             disabled={!props.isHost}
                             value={props.language}
+                            defaultValue={"en"}
                         >
                             <option value="en">ENGLISH</option>
                             <option value="de">GERMAN</option>
@@ -126,9 +127,9 @@ const GameSettings = (props) => {
 GameSettings.propTypes = {
     isHost: PropTypes.bool,
     language: PropTypes.string,
-    balance: PropTypes.number,
-    smallBlind: PropTypes.number,
-    bigBlind: PropTypes.number,
+    balance: PropTypes.string,
+    smallBlind: PropTypes.string,
+    bigBlind: PropTypes.string,
     playlistUrl: PropTypes.string,
     onLanguageChange: PropTypes.func,
     onBalanceChange: PropTypes.func,

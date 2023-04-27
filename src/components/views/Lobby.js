@@ -1,7 +1,7 @@
 import {AppBar, Button, Card, CardContent, Grid, Toolbar, Typography} from "@material-ui/core";
-import {useEffect, useState} from "react";
+import {useContext, useEffect, useState} from "react";
 import Stomp from "stompjs";
-import {useHistory, useLocation, useParams} from "react-router-dom";
+import {useHistory, useParams} from "react-router-dom";
 import SockJS from "sockjs-client";
 import {api} from "../../helpers/api";
 import PropTypes from "prop-types";
@@ -11,8 +11,11 @@ import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import GameSettings from "../ui/GameSettings";
 import Player from "../../models/Player";
 import SettingsData from "../../models/SettingsData";
+import {Spinner} from "../ui/Spinner";
+import UserContext from "../contexts/UserContext";
+import StompContext from "../contexts/StompContext";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(() => ({
     root: {
         height: '100vh',
         direction: 'column',
@@ -44,7 +47,7 @@ const useStyles = makeStyles((theme) => ({
         alignItems: 'center',
         justifyContent:'space-around'
     },
-    // may need to move playerlist component into view component to access classes
+    // may need to move playerList component into view component to access classes
     playerListContainer: {
         width: "100%",
         height: "100%",
@@ -60,6 +63,7 @@ const useStyles = makeStyles((theme) => ({
 
     }
 }));
+
 const PlayerList = (props) => {
 
     return (
@@ -95,26 +99,26 @@ PlayerList.propTypes = {
 const Lobby = () => {
     // maybe start using contexts to pass state
     // TODO: disconnect from WS endpoint on unmount and send leave game message to WS endpoint
-    // TODO: add leave game button
-
-    const classes = useStyles();
+    // TODO: implement a context for the stompClient & subscriptions
+    const classes = useStyles(); // material-ui
     const history = useHistory();
-    const location = useLocation();
     const { gameId } = useParams();
+    const { user } = useContext(UserContext);
+    const { stompClient } = useContext(StompContext);
+    const { setStompClient } = useContext(StompContext);
 
     const [gameStarting, setGameStarting] = useState(false);
-    const [user, setUser] = useState(location.state.user);
     const [players, setPlayers] = useState([]);
 
-    // setting state variables
+    // host information
+    const [host, setHost] = useState(null);
     const [isHost, setIsHost] = useState(false);
 
     const [language, setLanguage] = useState("en");
     const [playlistUrl, setPlaylistUrl] = useState("");
-    const [balance, setBalance] = useState(3000);
-    const [bigBlind, setBigBlind] = useState(100);
-    const [smallBlind, setSmallBlind] = useState(50);
-    const [stompClient, setStompClient] = useState(null);
+    const [initialBalance, setInitialBalance] = useState("3000");
+    const [bigBlind, setBigBlind] = useState("100");
+    const [smallBlind, setSmallBlind] = useState("50");
     // subscribe to player-list updates
     const [playersSubscription, setPlayersSubscription] = useState(null);
     // subscribe to setting updates
@@ -122,86 +126,93 @@ const Lobby = () => {
     // subscribe to game started
     const [gameStartSubscription, setGameStartSubscription] = useState(null);
 
-    // when component first mounts:
-    // 1. create a new websocket connection
-    // 2. subscribe to the /topic/games/{gameId}/players topic
-    // 3. send a message to the /app/games/{gameId}/players app endpoint
-    // subscription must be done first, to update the players list with own name
+    /** HANDLER FUNCTIONS */
+    const handlePlayerUpdate = (message) => {
+        const playerArray = JSON.parse(message.body);
+        setPlayers(playerArray);
+    }
+    const handleSettingsUpdate = (message) => {
+        console.log(message.data)
+        const settingsData = new SettingsData(message.data)
+        setLanguage(settingsData.language)
+        setPlaylistUrl(settingsData.playlistUrl)
+        setInitialBalance(settingsData.balance)
+        setBigBlind(settingsData.bigBlind)
+        setSmallBlind(settingsData.smallBlind)
+    }
+    const handleRemoteStartGame = (message) => {
+        console.log(message.data)
+        setGameStarting(true)
+        // eslint-disable-next-line no-restricted-globals
+        history.push(`/games/${gameId}`)
+    }
+
+    const handleStartGame = () => {
+        setGameStarting(true) // prevent player being removed from game on unmount
+        // TODO catch ResponseStatusExceptions thrown by server somehow, try/catch doesn't work(?)
+        stompClient.send(`/games/${gameId}/start`, {})
+        history.push(`/games/${gameId}`)
+    }
+
+    const handleLeaveGame = () => {
+        // remove player from playerList & disconnect WS
+        const destination = `/app/games/${gameId}/players/leave`
+        const token = localStorage.getItem("token");
+        const name = localStorage.getItem("name");
+        const requestBody = JSON.stringify({ name, token });
+        // TODO catch exceptions somehow
+        stompClient.send(destination, {}, requestBody);
+        // unsub & disconnect
+        if(settingsSubscription) settingsSubscription.unsubscribe();
+        if(playersSubscription) playersSubscription.unsubscribe();
+        if(gameStartSubscription) gameStartSubscription.unsubscribe();
+        stompClient.disconnect();
+        history.push("/home");
+    }
+
+    /** ON MOUNT */
     useEffect(() => {
         // check if user is host -> able to modify settings
-        const checkUserHost = async () => {
+        const checkHost = async () => {
             const response = await api.get(`/games/${gameId}/host`);
-            const host = new Player(response.data);
-            if (host.token === user.token) {
+            const hostPlayer = new Player(response.data);
+            setHost(hostPlayer);
+            if (hostPlayer.token === user.token) {
                 setIsHost(true);
             }
-            else {
-                setIsHost(false);
-            }
         }
-        checkUserHost();
+        checkHost();
 
-        // connect WS
+        // setup stomp client
         async function connectSocket() {
             let socket = new SockJS("http://localhost:8080/sopra-websocket");
             const client = Stomp.over(socket);
-            setStompClient(client);
-
             client.connect({}, () => {
-                console.log("Websocket connection established");
+                setStompClient(client);
                 // SUBSCRIPTIONS //
-                setPlayersSubscription(client.subscribe(
-                    `/topic/games/${gameId}/players`,
-                    (message) => {
-                        setPlayers(JSON.parse(message.data));
-                        console.log(message.data);
-                    }
-                ));
+                setPlayersSubscription(
+                    client.subscribe(`/topic/games/${gameId}/players`, handlePlayerUpdate)
+                )
                 setSettingsSubscription(
-                    client.subscribe(
-                    `/topic/games/${gameId}/settings`,
-                    (message) => {
-                        console.log(message.data)
-                        const settingsData = new SettingsData(message.data)
-                        setLanguage(settingsData.language)
-                        setPlaylistUrl(settingsData.playlistUrl)
-                        setBalance(settingsData.balance)
-                        setBigBlind(settingsData.bigBlind)
-                        setSmallBlind(settingsData.smallBlind)
-                    }
-                ));
-
+                    client.subscribe(`/topic/games/${gameId}/settings`, handleSettingsUpdate)
+                )
                 setGameStartSubscription(
-                    client.subscribe(
-                      `/topic/games/${gameId}/settings`,
-                      (message) => {
-                        console.log(message.data)
-                        setGameStarting(true)
-                        // eslint-disable-next-line no-restricted-globals
-                        history.push(`/games/${gameId}`)
-                      }
-                    )
-                  );
-                  
+                    client.subscribe(`/topic/games/${gameId}/start`, handleRemoteStartGame)
+                )
                 // ADD PLAYER TO GAME
-                const username = user.username;
-                const score = 0;
+                const name = user.name;
                 const token = localStorage.getItem("token");
-                const requestBody = JSON.stringify({username, score, token});
-                try {
-                    client.send(
-                        `/app/games/${gameId}/players/join`,
+                const requestBody = JSON.stringify({name, token});
+                // TODO catch errors somehow - try/catch doesn't work because WS
+                client.send(
+                        `/app/games/${gameId}/players/add`,
                         {},
                         requestBody
-                    )
-                }
-                catch (error) { // if joining fails - redirect back to home
-                    alert(`Couldn't join the lobby: ${error.response.message}`)
-                    history.push("/home");
-                }
+                )
             });
+            return client;
         }
-        connectSocket();
+        connectSocket().then((client) => {setStompClient(client)});
 
         // CLEANUP //
         return () => {
@@ -210,7 +221,7 @@ const Lobby = () => {
                 settingsSubscription.unsubscribe();
                 return
             }
-            leaveGame()
+            handleLeaveGame()
         }
     }, []);
 
@@ -225,16 +236,16 @@ const Lobby = () => {
     let settings = <GameSettings isHost={isHost}
                                  // variables
                                  language={language}
-                                 initialBalance={balance}
+                                 balance={initialBalance}
                                  bigBlind={bigBlind}
                                  smallBlind={smallBlind}
-                                 playlist={playlistUrl}
+                                 playlistUrl={playlistUrl}
                                  // setters
                                  onLanguageChange={l => setLanguage(l)}
-                                 onInitialBalanceChange={b => setBalance(b)}
+                                 onBalanceChange={b => setInitialBalance(b)}
                                  onBigBlindChange={b => setBigBlind(b)}
                                  onSmallBlindChange={s => setSmallBlind(s)}
-                                 onPlaylistChange={p => setPlaylistUrl(p)}
+                                 onPlaylistUrlChange={p => setPlaylistUrl(p)}
     />;
 
 
@@ -242,101 +253,67 @@ const Lobby = () => {
         settings = <GameSettings isHost={isHost}
                                 // variables
                                  language={language}
-                                 balance={balance}
+                                 balance={initialBalance}
                                  bigBlind={bigBlind}
                                  smallBlind={smallBlind}
                                  playlistUrl={playlistUrl}
                                 // setters
                                  onLanguageChange={l => setLanguage(l)}
-                                 onBalanceChange={b => setBalance(b)}
+                                 onBalanceChange={b => setInitialBalance(b)}
                                  onBigBlindChange={b => setBigBlind(b)}
                                  onSmallBlindChange={s => setSmallBlind(s)}
                                  onPlaylistUrlChange={p => setPlaylistUrl(p)}
         />
-    }, [isHost, language, balance, bigBlind, smallBlind, playlistUrl])
+    }, [isHost, language, initialBalance, bigBlind, smallBlind, playlistUrl])
 
-    const startGame = () => {
-        // prevent player being removed from game on unmount
-        setGameStarting(true)
+    let content = <Spinner/>
 
-        // notify other players
-        try {
-            stompClient.send(`/games/${gameId}/start`, {})
-        }
-        catch (error) {
-            const response = error.response
-
-            if(response.status === 400) {
-                alert(`Couldn't start the game: ${response.message}`)
-            }
-            else {
-                console.log("Something went wrong while starting the game")
-            }
-        }
-
-        // redirect
-        history.push(`/games/${gameId}`)
+    if(host && stompClient) {
+        content = <Grid item>
+            <Card className={classes.mainCard}>
+                <AppBar position={"relative"}>
+                    <Toolbar className={classes.cardBar}>
+                        <Typography className={classes.lobbyTitle}>
+                            {host.name}'s lobby
+                        </Typography>
+                        <Button variant={"contained"}
+                                disabled={!isHost}
+                                onClick={handleStartGame}
+                        >
+                            Start Game
+                        </Button>
+                        <Button className={classes.copyButton}
+                                color={"inherit"}
+                                variant={"outlined"}
+                                onClick={() => {navigator.clipboard.writeText(gameId);}}
+                        >
+                            Copy lobby id
+                        </Button>
+                        <IconButton color={"inherit"}
+                                    onClick={handleLeaveGame}
+                        >
+                            <ExitToAppIcon/>
+                        </IconButton>
+                    </Toolbar>
+                </AppBar>
+                <Grid container className={classes.cardContainer}>
+                    <Grid item>
+                        {playerList}
+                    </Grid>
+                    <Grid item>
+                        {settings}
+                    </Grid>
+                </Grid>
+            </Card>
+        </Grid>
     }
 
-    const leaveGame = () => {
-        // remove player from playerList & disconnect WS
-        const destination = `/app/games/${gameId}/players/leave`
-        const token = localStorage.getItem("token");
-        const username = localStorage.getItem("username");
-        const responseBody = JSON.stringify({ token, username });
-        // TODO catch exceptions
-        stompClient.send(destination, {}, responseBody);
-        // unsub & disconnect
-        gameStartSubscription.unsubscribe();
-        settingsSubscription.unsubscribe();
-        stompClient.disconnect();
-    }
 
     return (
         <Grid container
               className={classes.root}
         >
-            <Grid item>
-                <Card className={classes.mainCard}>
-                    <AppBar position={"relative"}>
-                        <Toolbar className={classes.cardBar}>
-                            <Typography className={classes.lobbyTitle}>
-                                {user.username}'s lobby
-                            </Typography>
-                            <Button variant={"contained"}
-                                    disabled={!isHost}
-                                    onClick={startGame}
-                            >
-                                Start Game
-                            </Button>
-                            <Button variant={"contained"}
-                                    disabled={!isHost}
-                                    onClick={leaveGame}
-                            >
-                                Leave Game
-                            </Button>
-                            <Button className={classes.copyButton}
-                                    color={"inherit"}
-                                    variant={"outlined"}
-                                    onClick={() => {navigator.clipboard.writeText(gameId);}}
-                            >
-                                Copy lobby id
-                            </Button>
-                            <IconButton>
-                                <ExitToAppIcon/>
-                            </IconButton>
-                        </Toolbar>
-                    </AppBar>
-                    <Grid container className={classes.cardContainer}>
-                        <Grid item>
-                            {playerList}
-                        </Grid>
-                        <Grid item>
-                            {settings}
-                        </Grid>
-                    </Grid>
-                </Card>
-            </Grid>
+            {content}
         </Grid>
     )
 }
