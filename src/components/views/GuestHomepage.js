@@ -45,10 +45,15 @@ const useStyles = makeStyles((theme) => ({
         height: '80%',
         width: '100%',
         alignItems: 'center',
-        justifyContent:'space-evenly'
+        justifyContent:'space-evenly',
+        color: 'white'
     },
     menuIcon: {
-        fontSize: 100
+        fontSize: 100,
+        color: 'black'
+    },
+    button: {
+        visibility: 'visible'
     }
 
 }));
@@ -123,9 +128,11 @@ const GuestHomepage = () => {
                           className={classes.cardContainer}
                     >
                         <Grid item>
-                            <Tooltip title={'Join Game'}>
-                                <IconButton onClick={toggleDialog}>
-                                    <InputIcon className={classes.menuIcon}/>
+                            <Tooltip aria-
+                                title={'Join Game'}
+                                >
+                                <IconButton onClick={toggleDialog} className={classes.button} style={{ color: 'black' }} aria-hidden = {false}>
+                                    <InputIcon className={classes.menuIcon} aria-hidden = {false}/>
                                 </IconButton>
                             </Tooltip>
                             <Dialog open={dialogOpen} onClose={toggleDialog}>
