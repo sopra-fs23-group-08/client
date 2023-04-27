@@ -89,9 +89,9 @@ const GameSettings = (props) => {
                     </LabeledSetting>
                     <LabeledSetting label={"Playlist"}>
                         <TextField placeholder="Paste a link here"
-                                   onChange={event => props.onPlaylistChange(event.target.value)}
+                                   onChange={event => props.onPlaylistUrlChange(event.target.value)}
                                    disabled={!props.isHost}
-                                   value={props.playlist}
+                                   value={props.playlistUrl}
                                    fullWidth />
                     </LabeledSetting>
                 </SettingBox>
@@ -99,9 +99,9 @@ const GameSettings = (props) => {
             <Grid item xs={6}>
                 <SettingBox label={"Balance & Blinds"}>
                     <LabeledSetting label={"Initial Balance"}>
-                        <TextField onChange={event => props.onInitialBalanceChange(event.target.value)}
+                        <TextField onChange={event => props.onBalanceChange(event.target.value)}
                                    disabled={!props.isHost}
-                                   value={props.initialBalance}
+                                   value={props.balance}
                                    fullWidth />
                     </LabeledSetting>
                     <LabeledSetting label={"Big Blind"}>
@@ -126,15 +126,15 @@ const GameSettings = (props) => {
 GameSettings.propTypes = {
     isHost: PropTypes.bool,
     language: PropTypes.string,
-    initialBalance: PropTypes.number,
+    balance: PropTypes.number,
     smallBlind: PropTypes.number,
     bigBlind: PropTypes.number,
-    playlist: PropTypes.string,
+    playlistUrl: PropTypes.string,
     onLanguageChange: PropTypes.func,
-    onInitialBalanceChange: PropTypes.func,
+    onBalanceChange: PropTypes.func,
     onBigBlindChange: PropTypes.func,
     onSmallBlindChange: PropTypes.func,
-    onPlaylistChange: PropTypes.func
+    onPlaylistUrlChange: PropTypes.func
 }
 
 // onStartInfoChange: setStartInfo(event.target.checked)

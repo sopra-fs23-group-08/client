@@ -71,13 +71,16 @@ const GuestHomepage = () => {
     const createGame = async () => {
         console.log("Creating game...");
 
-        // create game with placeholder GuestUser as host, pass user object to lobby
-        const response = await api.post("/games", JSON.stringify({user}));
-
-        // Here we use location.state to pass the user object to the lobby
-        // up until here we used localStorage to store the user object
-        // might want to change this to be consistent
-        history.push(`/games/${response.data.id}/lobby`, {user: user});
+        try {
+            const response = await api.post("/games", JSON.stringify({user}));
+            // Here we use location.state to pass the user object to the lobby
+            // up until here we used localStorage to store the user object
+            // might want to change this to be consistent
+            history.push(`/games/${response.data.id}/lobby`, {user: user});
+        }
+        catch (error) {
+            alert(`Couldn't create a new game: ${error.response.data.message}`);
+        }
     }
 
     const joinLobby = () => {
