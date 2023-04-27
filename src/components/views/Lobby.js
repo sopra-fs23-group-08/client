@@ -12,6 +12,7 @@ import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import GameSettings from "../ui/GameSettings";
 import Player from "../../models/Player";
 import SettingsData from "../../models/SettingsData";
+import { useHistory} from "react-router-dom";
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -115,6 +116,9 @@ const Lobby = () => {
     const [bigBlind, setBigBlind] = useState(100);
     const [smallBlind, setSmallBlind] = useState(50);
 
+    const [client, setClient] = useState(null);
+
+    const [history, setHistory] = useState([]);
 
     const [stompClient, setStompClient] = useState(null);
     // subscribe to player-list updates
@@ -172,16 +176,19 @@ const Lobby = () => {
                         setSmallBlind(settingsData.smallBlind)
                     }
                 ));
-                setGameStartSubscription( // -> if the game is started by someone else
+
+                setGameStartSubscription(
                     client.subscribe(
-                        `/topic/games/${gameId}/settings`,
-                        (message) => {
-                            console.log(message.data)
-                            setGameStarting(true) // -> so player is not removed from game on unmount
-                            history.push(`/games/${gameId}`)
-                        }
+                      `/topic/games/${gameId}/settings`,
+                      (message) => {
+                        console.log(message.data)
+                        setGameStarting(true)
+                        // eslint-disable-next-line no-restricted-globals
+                        history.push(`/games/${gameId}`)
+                      }
                     )
-                )
+                  );
+                  
                 // ADD PLAYER TO GAME
                 const username = user.username;
                 const score = 0;
