@@ -1,6 +1,6 @@
 import {createContext, useState} from "react";
 
-const UserContext = createContext();
+const UserContext = createContext(undefined);
 
 export function UserProvider(props) {
 

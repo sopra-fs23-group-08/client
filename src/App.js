@@ -1,5 +1,5 @@
 import AppRouter from "components/routing/routers/AppRouter";
-import UserContext from "./components/contexts/UserContext";
+import {UserProvider} from "./components/contexts/UserContext";
 /**
  * Happy coding!
  * React Template by Lucas Pelloni
@@ -8,9 +8,9 @@ import UserContext from "./components/contexts/UserContext";
 const App = () => {
   return (
     <div>
-        <UserContext>
+        <UserProvider>
             <AppRouter/>
-        </UserContext>
+        </UserProvider>
     </div>
   );
 };
