@@ -69,7 +69,9 @@ const GuestHomepage = () => {
     const createGame = async () => {
         console.log("Creating game...");
         try {
-            const response = await api.post("/games", JSON.stringify({user}));
+            const name = user.name;
+            const token = user.token;
+            const response = await api.post("/games", JSON.stringify({name, token}));
             // Here we use location.state to pass the user object to the lobby
             // up until here we used localStorage to store the user object
             // might want to change this to be consistent
