@@ -95,7 +95,7 @@ const Login = () => {
             </Button>
             <Dialog open={dialogOpen} onClose={toggleDialog}>
               <DialogTitle>
-                Join Game
+                What should we call you?
               </DialogTitle>
               <DialogContent>
                 <TextField label={"Enter a username"}
