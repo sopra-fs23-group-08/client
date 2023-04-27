@@ -1,4 +1,4 @@
-import {useHistory, useLocation} from "react-router-dom";
+import {useHistory} from "react-router-dom";
 import {
     Grid,
     Card,
@@ -11,13 +11,13 @@ import {
     Tooltip, Dialog, DialogTitle, DialogContent, TextField, DialogActions
 } from "@material-ui/core";
 import {makeStyles} from "@material-ui/core/styles";
-import React, {useEffect, useState} from "react";
+import React, {useContext, useState} from "react";
 import SearchIcon from '@material-ui/icons/Search';
 import VideogameAssetIcon from '@material-ui/icons/VideogameAsset';
 import InputIcon from '@material-ui/icons/Input';
 import HowToPlay from "../ui/HowToPlay";
 import {api} from "../../helpers/api";
-import User from "../../models/User";
+import UserContext from "../contexts/UserContext";
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -64,13 +64,10 @@ const GuestHomepage = () => {
     const history = useHistory();
     const [dialogOpen, setDialogOpen] = useState(false);
     const [LobbyID, setLobbyID] = useState([""]);
-    const [user, setUser] = useState(new User());
-    user.username = localStorage.getItem("guestUsername");
-    user.token = localStorage.getItem("guestToken");
+    const { user } = useContext(UserContext);
 
     const createGame = async () => {
         console.log("Creating game...");
-
         try {
             const response = await api.post("/games", JSON.stringify({user}));
             // Here we use location.state to pass the user object to the lobby
@@ -110,10 +107,10 @@ const GuestHomepage = () => {
                             className={classes.cardBar}
                         >
                             <Avatar className={classes.headerAvatar}>
-                                {user.username.charAt(0)}
+                                {user.name.charAt(0)}
                             </Avatar>
                             <Typography className={classes.headerTitle}>
-                                Playing as {user.username}
+                                Playing as {user.name}
                             </Typography>
                             <HowToPlay/>
                         </Toolbar>

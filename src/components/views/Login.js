@@ -52,9 +52,9 @@ const Login = () => {
 
   // create token, store it, pass guestUser as location state in history.push
   const playAsGuest = () => {
-    const username = guestUsername;
+    const name = guestUsername;
     const token = "guest" + crypto.randomUUID();
-    const guestUser = new User({username, token});
+    const guestUser = new User({name, token});
     // store user to context
     setUser(guestUser);
 
