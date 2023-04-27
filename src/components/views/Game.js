@@ -20,21 +20,22 @@ import HelpIcon from "@material-ui/icons/Help";
 import PlayArrowIcon from "@material-ui/icons/PlayArrow";
 import HowToPlay from 'components/ui/HowToPlay';
 import EndOfGame from 'components/ui/EndofGame';
-
+import ShowDown from 'components/ui/ShowDown';
 
 
 const Game = () => {
   const location = useLocation();
   const [stompClient, setStompClient] = useState(null);
-  const [gamePhase, setGamePhase] = useState(null);
   const [playerList, setPlayerList] = useState([]);
+  const [gamePhase, setGamePhase] = useState(''); //?
+  const [winner, setWinner] = useState(null); 
+  const [EndOfGame, setEndOfGame] = useState(false);
   const [video, setVideo] = useState({});  //?
   const [pot, setPot] = useState(0);
   const [callAmount, setCallAmount] = useState(0);
   const [myHand, setMyHand] = useState([]);
   const [decision, setDecision] = useState('fold');//?
   const [showHowToPlay, setShowHowToPlay] = useState(false);
-  const [showEndOfGame, setEndOfGame] = useState(false);
   const [showShowDown, setShowShowDown] = useState(false);
   const [comments, setComments] = useState([]);
 
@@ -79,41 +80,55 @@ const Game = () => {
       });
 
       // general, subscribe: topic/games/{gameId}/state/general
-      stomp.subscribe(`/topic/games/${gameId}/state/general`, (message) => {
+      const subscription = stomp.subscribe(`/topic/games/${gameId}/state`, (message) => {
         const data = JSON.parse(message.body);
+        setPot(data.potAmount);
+        setRoundNumber(data.roundNumber);
         setPlayerList(data.players);
         setBigBlind(data.bigBlind);
         setSmallBlind(data.smallBlind);
         setCallAmount(data.callAmount);
-        setPot(data.potAmount);
         setGamePhase(data.gamePhase);
       });
 
-     // hand, subscribe: topic/games/{gameId}/players/{userId}/hand, to get comments data
-     stomp.subscribe(`/topic/games/${gameId}/players/${localStorage.getItem('userId')}/hand`, (message) => {
-      const data = JSON.parse(message.body);
-      const comments = data.comments.map(comment => ({
-        content: comment.content,
-        author: comment.author,
-        date: comment.date,
-        likes: comment.likes,
-        is_matched: comment.is_matched,
-      }));
-      setMyHand(comments);
-    });
 
+
+      // subscribe to the comments for the local player's hand
+      stompClient.connect({}, () => {
+        stompClient.subscribe(`/topic/games/${props.gameId}/players/${props.userId}/hand`, (message) => {
+          const commentsData = JSON.parse(message.body).map((comment) => {
+            return {
+              content: comment.content,
+              author: comment.author,
+              date: comment.date,
+              likes: comment.likes,
+              isMatched: comment.is_matched,
+            };
+          });
+          setMyHand(commentsData);
+        });
+      });
+
+
+        
       //players, subscribe: topic/games/{gameId}/players, to get all players' data
       stomp.subscribe(`/topic/games/${gameId}/players`, (message) => {
         const data = JSON.parse(message.body);
         const players = data.map(player => {
+          const decision = player.lastDecision ? player.lastDecision.action : "No decision";
+          const callAmount = player.lastDecision ? player.lastDecision.amount : "N/A";
           return {
             username: player.username,
-            decision: player.decision,
-            callAmount: player.callAmount
-          }
+            decision: player.lastDecision,
+            callAmount: player.callAmount,
+            score: player.score,
+            token: player.token
+          };
         });
         setPlayerList(players);
       });
+      
+
       
       const videoSubscription = stompClient.subscribe(
         `/games/${gameId}/state/video`,
@@ -160,27 +175,71 @@ const Game = () => {
       // update players
       const handlePlayersUpdate = (message) => {
         const data = JSON.parse(message.body);
-        const playerData = data.reduce((obj, item) => {
-          obj[item.username] = item.lastDecision;
-          return obj;
-        }, {});
-        setPlayerList(playerData);
+        const players = data.map((player) => ({
+          username: player.username,
+          token: player.token,
+          score: player.score,
+          lastDecision: player.lastDecision,
+        }));
+        setPlayerList(players);
       };
+      
         
       // update hand
-      const handleHandUpdate = (message) => {
+      const handleUpdateCommentCard = (message) => {
         const data = JSON.parse(message.body);
-        const commentsData = data.comments.map((comment) => {
-          return {
-            content: comment.content,
-            author: comment.author,
-            date: comment.date,
-            likes: comment.likes,
-            isMatched: comment.isMatched,
-          };
+        const comment = data.comment;
+        setComments(comments => {
+          const index = comments.findIndex(c => c.id === comment.commentId);
+          if (index >= 0) {
+            return [
+              ...comments.slice(0, index),
+              {
+                id: comment.commentId,
+                author: comment.author,
+                content: comment.content,
+                likes: comment.likes,
+                date: comment.date
+              },
+              ...comments.slice(index + 1)
+            ];
+          } else {
+            return comments;
+          }
         });
-        setComments(commentsData);
       };
+    
+      // notify players that a player has left the game
+      useEffect(() => {
+        const gameId = location.pathname.split('/')[2];
+      
+        // Subscribe to WebSocket messages on /topic/games/{gameId}/players
+        stompClient.subscribe(`/topic/games/${gameId}/players`, (message) => {
+          const updatedPlayerList = JSON.parse(message.body);
+      
+          // Update player list in front-end
+          setPlayerList(updatedPlayerList);
+      
+          // Notify all remaining players that a player has left the game
+          const leftPlayer = playerList.find((player) => !updatedPlayerList.some((updatedPlayer) => updatedPlayer.username === player.username));
+          if (leftPlayer) {
+            console.log(`${leftPlayer.username} has left the game`);
+          }
+        });
+      
+        // Unsubscribe from WebSocket messages when component unmounts
+        return () => stompClient.unsubscribe(`/topic/games/${gameId}/players`);
+      }, [stompClient, location.pathname, playerList]);
+
+
+
+    // subscribe to the topic for updating comment cards
+    useEffect(() => {
+      stompClient.subscribe(`/app/games/${props.gameId}/players/${props.userId}/hand`, handleUpdateCommentCard);
+      return () => {
+        stompClient.unsubscribe(`/app/games/${props.gameId}/players/${props.userId}/hand`);
+      };
+    }, [props.gameId]);
 
       
       //decision button: raise, call
@@ -203,18 +262,51 @@ const Game = () => {
         stompClient.send(`/app/games/${gameId}/players/${localStorage.getItem('userId')}/decision`, {}, JSON.stringify(decisionData));
       };
       
+      // update the pot amount after each player's decision
+      const handlePlayerDecisionChanged = (message) => {
+        const data = JSON.parse(message.body);
+        setPot(data.potAmount);
+      };
+      
+      stomp.subscribe(`/topic/games/${gameId}/players/${localStorage.getItem('userId')}/decision`, handlePlayerDecisionChanged);
+      
   
       // leave button
       // send to: games/game_id/players/player_id/leave ？？？
       const handleLeaveGame = () => {
+        setShowLeaveModal(true);
+      };
+
+      const handleConfirmLeave = () => {
         const gameId = location.pathname.split('/')[2];
-        stompClient.send(`/app/games/${gameId}/players/${localStorage.getItem('userId')}/leave`, {}, '');
+        const playerId = localStorage.getItem('userId');
+        stompClient.send(`/app/games/${gameId}/players/remove`, {}, JSON.stringify({ username: username, token: token }));
+        // Update player list in front-end
+        setPlayerList((prevPlayerList) => prevPlayerList.filter((player) => player.username !== username));
+        setShowLeaveModal(false);
+        // redirect to home page
+        window.location.href = '/home';
+      };
+    
+      
+      const handleCancelLeave = () => {
+        setShowLeaveModal(false);
       };
   
-  
-      const handleHowToPlayClick = () => {
+      const handleHelpClick = () => {
         setShowHowToPlay(true);
       };
+
+      const handleEndOfGame = (gameEndMessage) => {
+        setWinner(gameEndMessage.winner);
+        setGamePhase(gameEndMessage.gamePhase);
+        setEndOfGame(true);
+      };
+
+      const handleShowShowDown = () => {
+        setShowShowDown(true);
+      };
+      
       
       heartIcons.forEach((icon) => {
         icon.addEventListener('click', (event) => {
@@ -224,39 +316,32 @@ const Game = () => {
       
   return (
     <body>
+      {showShowDown ? (
+        <ShowDown />
+      ) : (
+
       <div className="box">
+        
         <div className="left">
           <ul className="player-list">
-            <li>
-              <a href="/users/user1">PlayerUsername</a>
-              Called 100 points, has 1000 points now
+            {playerList.map((player, index) => (
+            <li key={index}>
+              <a href={player.token ? `/users/${player.username}` : null}>{player.username}</a>
+              {player.lastDecision && (
+                <span>
+                  {player.lastDecision.type === 'call'
+                    ? `Called ${player.lastDecision.amount} points`
+                    : player.lastDecision.type === 'raise'
+                    ? `Raised ${player.lastDecision.amount} points`
+                    : 'Folded'}
+                    , has {player.score} points
+                </span>
+              )}
             </li>
-            <li>
-              <a href="/users/user2">PlayerUsername</a>
-              Called 100 points, has 1000 points now
-            </li>
-            <li>
-              <a href="/users/user3">PlayerUsername</a>
-              Called 100 points, has 1000 points now
-            </li>
-            <li>
-              <a href="/users/user4">PlayerUsername</a>
-              Called 100 points, has 1000 points now
-            </li>
-            <li>
-              <a href="/users/user5">PlayerUsername</a>
-              Called 100 points, has 1000 points now
-            </li>
-            <li>
-              <a href="/users/user6">PlayerUsername</a>
-              Called 100 points, has 1000 points now
-            </li>
-            <li>
-              <a href="/users/user7">PlayerUsername</a>
-              Called 100 points, has 1000 points now
-            </li>
-          </ul> 
-        </div>
+          ))}
+        </ul>
+      </div>
+
   
         <div className="center">
           <div className="title">{videoData.title}</div>
@@ -273,88 +358,54 @@ const Game = () => {
   
   
       <div className="right">
-        <div className="round-number">Round 4</div>
-        <div className="pot-amount">pot: 13000</div>
+        <div className="round-number">Round {gamePhase}</div>
+        <div className="pot-amount">pot: {pot}</div>
         <div className="input-amount">
           <input className="input-amount" type="number" placeholder="Enter amount..." />
         </div>
         <div className="button-container">
           <button className="call-button">call</button>
           <button className="raise-button">raise</button>
-          <button className="left-button">leave</button>
-          <button className="help-button">help</button>
+          <button className="left-button" onClick={handleLeaveConfirmation}>
+            leave
+          </button>
+          <button className="help-button" onClick={handleHelpClick}>help</button>
         </div>
       </div>
   
         <div className="footer">
           <div className="card-container">
-            <div className="card">
-              <div className="card-top">
-                <span>MyUsername</span>
-                <i className="fas fa-heart"></i>
+            {myHand.map((comment, index) => (
+              <div className="card" key={index}>
+                <div className="card-top">
+                  <span>{comment.author}</span>
+                  <i className="fas fa-heart"></i>
+                </div>
+                <div className="card-main">
+                  {comment.content}
+                </div>
               </div>
-              <div className="card-main">
-                This is comment content. This is comment content. This is comment content.
-              </div>
-            </div>
-            <div className="card">
-              <div className="card-top">
-                <span>MyUsername</span>
-                <i className="fas fa-heart"></i>
-              </div>
-              <div className="card-main">
-                This is comment content. This is comment content. This is comment content.
-              </div>
-            </div>
-            <div className="card">
-              <div className="card-top">
-                <span>MyUsername</span>
-                <i className="fas fa-heart"></i>
-              </div>
-              <div className="card-main">
-                This is comment content. This is comment content. This is comment content.
-              </div>
-            </div>
-            <div className="card">
-              <div className="card-top">
-                <span>MyUsername</span>
-                <i className="fas fa-heart"></i>
-              </div>
-              <div className="card-main">
-                This is comment content. This is comment content. This is comment content.
-              </div>
-            </div>
-            <div className="card">
-              <div className="card-top">
-                <span>MyUsername</span>
-                <i className="fas fa-heart"></i>
-              </div>
-              <div className="card-main">
-                This is comment content. This is comment content. This is comment content.
-              </div>
-            </div>
-            <div className="card">
-              <div className="card-top">
-                <span>MyUsername</span>
-                <i className="fas fa-heart"></i>
-              </div>
-              <div className="card-main">
-                This is comment content. This is comment content. This is comment content.
-              </div>
-            </div>
-            <div className="card">
-              <div className="card-top">
-                <span>MyUsername</span>
-                <i className="fas fa-heart"></i>
-              </div>
-              <div className="card-main">
-                This is comment content. This is comment content. This is comment content.
-              </div>
-            </div>
+            ))}
           </div>
-        </div>
-  
       </div>
+            
+        {/* end of game section */}
+        {EndOfGame && <EndOfGame winner={winner} gamePhase={gamePhase} />}
+
+        {/* Show confirmation window when "leave" button is clicked */}
+        {showLeaveConfirmation && (
+        <div>
+          <p>Are you sure you want to leave the game?</p>
+          <button onClick={handleLeaveGame}>Yes</button>
+          <button onClick={() => setShowLeaveConfirmation(false)}>No</button>
+        </div>
+        )}
+        
+        {/* Show how to play window when "help" button is clicked */}
+        {showHowToPlay && <HowToPlay handleClose={() => setShowHowToPlay(false)} />}
+
+    </div>
+        )}
     </body>
 );
 };
