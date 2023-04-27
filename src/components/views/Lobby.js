@@ -1,8 +1,7 @@
-import {AppBar, Button, Card, CardActions, CardContent, Grid, TextField, Toolbar, Typography} from "@material-ui/core";
+import {AppBar, Button, Card, CardContent, Grid, Toolbar, Typography} from "@material-ui/core";
 import {useEffect, useState} from "react";
-import {getDomain} from "../../helpers/getDomain";
 import Stomp from "stompjs";
-import {useLocation, useParams} from "react-router-dom";
+import {useHistory, useLocation, useParams} from "react-router-dom";
 import SockJS from "sockjs-client";
 import {api} from "../../helpers/api";
 import PropTypes from "prop-types";
@@ -12,7 +11,6 @@ import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import GameSettings from "../ui/GameSettings";
 import Player from "../../models/Player";
 import SettingsData from "../../models/SettingsData";
-import { useHistory} from "react-router-dom";
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -100,6 +98,7 @@ const Lobby = () => {
     // TODO: add leave game button
 
     const classes = useStyles();
+    const history = useHistory();
     const location = useLocation();
     const { gameId } = useParams();
 
@@ -115,11 +114,6 @@ const Lobby = () => {
     const [balance, setBalance] = useState(3000);
     const [bigBlind, setBigBlind] = useState(100);
     const [smallBlind, setSmallBlind] = useState(50);
-
-    const [client, setClient] = useState(null);
-
-    const [history, setHistory] = useState([]);
-
     const [stompClient, setStompClient] = useState(null);
     // subscribe to player-list updates
     const [playersSubscription, setPlayersSubscription] = useState(null);
@@ -267,7 +261,7 @@ const Lobby = () => {
 
         // notify other players
         try {
-            client.send(`/games/${gameId}/start`, {})
+            stompClient.send(`/games/${gameId}/start`, {})
         }
         catch (error) {
             const response = error.response
