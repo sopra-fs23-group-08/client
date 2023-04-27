@@ -185,9 +185,8 @@ const Lobby = () => {
                   
                 // ADD PLAYER TO GAME
                 const username = user.username;
-                const score = 0;
                 const token = localStorage.getItem("token");
-                const requestBody = JSON.stringify({username, score, token});
+                const requestBody = JSON.stringify({username, token});
                 try {
                     client.send(
                         `/app/games/${gameId}/players/join`,
