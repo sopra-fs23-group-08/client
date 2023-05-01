@@ -149,7 +149,7 @@ const Lobby = () => {
 
     const handleStartGame = () => {
         setGameStarting(true); // prevent player being removed from game on unmount
-        stompClient.send(`/games/${gameId}/start`, {}, () => {
+        stompClient.send(`/app/games/${gameId}/start`, {}, () => {
           history.push(`/games/${gameId}`);
         });
       }
