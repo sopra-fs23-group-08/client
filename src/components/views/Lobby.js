@@ -150,7 +150,7 @@ const Lobby = () => {
     const handleStartGame = () => {
         setGameStarting(true) // prevent player being removed from game on unmount
         // TODO catch ResponseStatusExceptions thrown by server somehow, try/catch doesn't work(?)
-        stompClient.send(`/games/${gameId}/start`, {})
+        stompClient.send(`/app/games/${gameId}/start`, {})
         history.push(`/games/${gameId}`)
     }
 
