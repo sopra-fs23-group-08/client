@@ -207,7 +207,9 @@ const Game = () => {
         decision: decision,
         amount: decisionValue,
       };
-      stompClient.send(`/app/games/${gameId}/players/${localStorage.getItem('userId')}/decision`, {}, JSON.stringify(decisionData));
+      if (stompClient !== null) {
+        stompClient.send(`/app/games/${gameId}/players/${localStorage.getItem('userId')}/decision`, {}, JSON.stringify(decisionData));
+      }
     };
     handleDecisionSubmit();
 

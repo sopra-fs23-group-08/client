@@ -149,27 +149,29 @@ const Lobby = () => {
 
     const handleStartGame = () => {
         setGameStarting(true); // prevent player being removed from game on unmount
-        stompClient.send(`/app/games/${gameId}/start`, {}, () => {
+        stompClient.send(`/app/games/${gameId}/start`, {}); 
           history.push(`/games/${gameId}`);
-        });
+        
       }
       
 
     const handleLeaveGame = () => {
-        // remove player from playerList & disconnect WS
-        const destination = `/app/games/${gameId}/players/leave`
-        const token = localStorage.getItem("token");
-        const name = localStorage.getItem("name");
-        const requestBody = JSON.stringify({ name, token });
-        // TODO catch exceptions somehow
+    // remove player from playerList & disconnect WS
+    const destination = `/app/games/${gameId}/players/leave`
+    const token = localStorage.getItem("token");
+    const name = localStorage.getItem("name");
+    const requestBody = JSON.stringify({ name, token });
+    // TODO catch exceptions somehow
+    if(stompClient) {
         stompClient.send(destination, {}, requestBody);
         // unsub & disconnect
         if(settingsSubscription) settingsSubscription.unsubscribe();
         if(playersSubscription) playersSubscription.unsubscribe();
         if(gameStartSubscription) gameStartSubscription.unsubscribe();
         stompClient.disconnect();
-        history.push("/home");
     }
+    history.push("/home");
+}
 
     /** ON MOUNT */
     useEffect(() => {
