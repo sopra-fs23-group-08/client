@@ -7,6 +7,8 @@ import ShowDown from 'components/ui/ShowDown';
 import EndOfGame from 'components/ui/EndOfGame';
 import axios from 'axios';
 import { useContext } from 'react';
+import { useHistory } from 'react-router-dom';
+
 
 
 const Game = () => {
@@ -15,11 +17,11 @@ const Game = () => {
   const [gamePhase, setGamePhase] = useState(''); //?
   const [winner, setWinner] = useState(null); 
   const [gameEnd, setGameEnd] = useState(false);
-  const [video, setVideo] = useState({});  //?
   const [pot, setPot] = useState(0);
+  const [decisionAmount, setDecisionAmount] = useState(0);
   const [callAmount, setCallAmount] = useState(0);
   const [myHand, setMyHand] = useState([]);
-  const [decision, setDecision] = useState('fold');//?
+  const [playersDecision, setPlayersDecision] = useState([]);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [showShowDown, setShowShowDown] = useState(false);
   const [comments, setComments] = useState([]);
@@ -27,7 +29,6 @@ const Game = () => {
 
   const [bigBlind, setBigBlind] = useState(0);
   const [smallBlind, setSmallBlind] = useState(0);
-  const [handleHelpClick, setHandleHelpClick] = useState(false);
   const [handleShowDown, setHandleShowDown] = useState(false);
   const [handleEndOfGame, setHandleEndOfGame] = useState(false);
   const [token, setToken] = useState(localStorage.getItem('token'));
@@ -37,7 +38,7 @@ const Game = () => {
   const { connect } = useContext(StompContext);
 
   const [playerList, setPlayerList] = useState([]);
-
+  const history = useHistory();
   // define state variables for video data
   const [videoData, setVideoData] = useState({
     title: "",
@@ -59,6 +60,20 @@ const Game = () => {
     setPlayerList(data);
   };
   
+  const handleVideoDataUpdate = (message) => {
+    const data = JSON.parse(message.body);
+    setVideoData(data);
+  };
+
+  const handleGameUpdate = (message) => {
+    const data = JSON.parse(message.body);
+      setPot(data.potAmount);
+      setPlayerList(data.players);
+      setBigBlind(data.bigBlind);
+      setSmallBlind(data.smallBlind);
+      setCallAmount(data.callAmount);
+      setGamePhase(data.gamePhase);
+  };
   
 
   useEffect(() => {
@@ -83,31 +98,13 @@ const Game = () => {
     if (stompClient) {
       gameSubscription = stompClient.subscribe(
         `/topic/games/${gameId}/state`,
-        (message) => {
-          const data = JSON.parse(message.body);
-          setPot(data.potAmount);
-          setPlayerList(data.players);
-          setBigBlind(data.bigBlind);
-          setSmallBlind(data.smallBlind);
-          setCallAmount(data.callAmount);
-          setGamePhase(data.gamePhase);
-        }
+        handleGameUpdate
       );
 
     // Subscribe to the video
       const videoSubscription = stompClient.subscribe(
-        `/topic/games/${gameId}/state/video`,
-        (message) => {
-          const data = JSON.parse(message.body);
-          setVideoData({
-            title: data.title,
-            thumbnail: data.thumbnail,
-            releaseDate: data.releaseDate,
-            likes: data.likes,
-            length: data.length,
-            views: data.views
-          });
-        }
+        `/topic/games/${gameId}/video`,
+        handleVideoDataUpdate
       );
       const playerListSubscription = stompClient.subscribe(
         `/topic/games/${gameId}/players`,
@@ -124,7 +121,7 @@ const Game = () => {
           `/topic/games/${gameId}/players/${token}/decision`,
           (message) => {
             const data = JSON.parse(message.body);
-            setDecision(data);
+            setPlayersDecision(data);
           }
         );
         //subscribe to the winner 
@@ -171,30 +168,28 @@ const Game = () => {
 
 
 
-  const handleDecisionSubmit = () => {
-    const gameId = location.pathname.split('/')[2];
-    let decisionValue;
-    if (decision === 'raise') {
-      decisionValue = parseInt(callAmount);
-    } else if (decision === 'call') {
-      decisionValue = parseInt(callAmount);
-    } else {
-      decisionValue = 0;
-    }
-    const decisionData = {
-      decision: decision,
-      amount: decisionValue,
+    const handleDecisionSubmit = (decisionType) => {
+      const gameId = location.pathname.split('/')[2];
+      const token = localStorage.getItem('token');
+      const decisionValue = parseInt(decisionAmount) || 0;
+      const decisionData = {
+        token: token,
+        decision: decisionType,
+        amount: decisionValue,
+      };
+      stompClient.send(`/app/games/${gameId}/players/${token}/decision`, {}, JSON.stringify(decisionData));
     };
-    stompClient.send(`/app/games/${gameId}/players/${localStorage.getItem('token')}/decision`, {}, JSON.stringify(decisionData));
-  };
-
+    
+    const handleCall = () => {
+      handleDecisionSubmit('call');
+    };
+    
+    const handleRaise = () => {
+      handleDecisionSubmit('raise');
+    };
+    
     const handleLeaveGame = () => {
       setShowLeaveModal(true);
-      const gameId = location.pathname.split('/')[2];
-      const { username, token } = playerList.find(player => player.token === localStorage.getItem('token'));
-      stompClient.send(`/app/games/${gameId}/players/remove`, {}, JSON.stringify({ username: username, token: token }));
-      // Update player list in front-end
-      handlePlayerListUpdate((prevPlayerList) => prevPlayerList.filter((player) => player.username !== username));
     };
 
     // confirm leave
@@ -207,15 +202,19 @@ const Game = () => {
       handlePlayerListUpdate((prevPlayerList) => prevPlayerList.filter((player) => player.username !== username));
       setShowLeaveModal(false);
       // redirect to home page
-      window.location.href = '/home';
+      console.log('history:', history);
+      history.push('/home');
     };
     // cancel leave
     const handleCancelLeave = () => {
       setShowLeaveModal(false);
     };
 
-  
-  useEffect(() => {
+    const handleHelpClick = () => {
+      setShowHowToPlay(true);
+    };
+
+    // handle winner
     const handleGameEnd = (gameEndMessage) => {
       setWinner(gameEndMessage.winner);
       setGamePhase(gameEndMessage.gamePhase);
@@ -229,7 +228,6 @@ const Game = () => {
     const handleCloseShowDown = () => {
       setShowShowDown(false);
     };
-  }, [location.pathname]);
 
 
   return (
@@ -273,13 +271,26 @@ const Game = () => {
       <div className="right">
         <div className="round-number">Round {gamePhase}</div>
         <div className="pot-amount">pot: {pot}</div>
-        <div className="input-amount">
-          <input className="input-amount" type="number" placeholder="Enter amount..." />
-        </div>
+        <input
+          className="input-amount"
+          type="number"
+          placeholder="Enter amount..."
+          value={decisionAmount}
+          onChange={(event) => setDecisionAmount(event.target.value)}
+        />
         <div className="button-container">
-          <button className="call-button" onClick={handleDecisionSubmit}>call</button>
-          <button className="raise-button" onClick={handleDecisionSubmit}>raise</button>
+          <button className="call-button" onClick={handleCall}>call</button>
+          <button className="raise-button" onClick={handleRaise}>raise</button>
           <button className="left-button" onClick={handleLeaveGame}>leave</button>
+            <dialog open={ShowLeaveModal}>
+              <div className="modal">
+                <p>Are you sure you want to leave the game?</p>
+                <div className="button-container">
+                  <button className="confirm-button" onClick={handleConfirmLeave}>Yes</button>
+                  <button className="cancel-button" onClick={handleCancelLeave}>No</button>
+                </div>
+              </div>
+            </dialog>
           <button className="help-button" onClick={handleHelpClick}>help</button>
         </div>
       </div>
@@ -302,19 +313,12 @@ const Game = () => {
             
         {/* end of game section */}
         {gameEnd && <EndOfGame winner={winner} gamePhase={gamePhase} />}
-
-        {/* Show confirmation window when "leave" button is clicked */}
-        { ShowLeaveModal && (
-        <div>
-          <p>Are you sure you want to leave the game?</p>
-          <button onClick={handleLeaveGame}>Yes</button>
-          <button onClick={() => setShowLeaveModal(false)}>No</button>
-        </div>
-        )}
         
-        {/* Show how to play window when "help" button is clicked */}
-        {showHowToPlay && <HowToPlay handleClose={() => setShowHowToPlay(false)} />}
-
+    {/* Show how to play window when "help" button is clicked */}
+    {showHowToPlay && <HowToPlay handleClose={() => setShowHowToPlay(false)} />}
+    
+    {/* Show show down window when "show down" button is clicked */}
+    {showShowDown && <ShowDown handleClose={handleCloseShowDown} />}
     </div>
     </div>
   );
