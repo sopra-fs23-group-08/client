@@ -1,14 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import Stomp from 'stompjs';
 import StompContext from 'components/contexts/StompContext';
-import "styles/views/TestGame.scss";
+import "styles/views/Game.scss";
 import HowToPlay from 'components/ui/HowToPlay';
 import ShowDown from 'components/ui/ShowDown';
 import EndOfGame from 'components/ui/EndOfGame';
-import { connect } from 'net';
 import axios from 'axios';
-import SockJS from 'sockjs-client';
 import { useContext } from 'react';
 
 
@@ -49,142 +46,111 @@ const Game = () => {
     views: ""
   });
 
+  const handleCommentsUpdate = (message) => {
+    const data = JSON.parse(message.body);
+    setComments(data);
+  }
   
-  // subscribe to player-list updates
-  const [playersSubscription, setPlayersSubscription] = useState(null);
-  // subscribe to video updates
-  const [videoSubscription, setVideoSubscription] = useState(null);
-  // subscribe to comments updates
-  const [commentsSubscription, setCommentsSubscription] = useState(null);
-  // subscribe to game updates
-  const [gameSubscription, setGameSubscription] = useState(null);
-  // subscribe to decision updates
-  const [decisionSubscription, setDecisionSubscription] = useState(null);
-  // subsribe to the winner
-  const [winnerSubscription, setWinnerSubscription] = useState(null);
-  // subscribe to game end
-  const [gameEndSubscription, setGameEndSubscription] = useState(null);
 
+  useEffect(() => {
+    const createStompClient = async () => {
+      const stompClient = await connect();
+      return stompClient;
+    };
+  
+    if (!stompClient) {
+      createStompClient().then((client) => {
+        setStompClient(client);
+      });
+    }
+  }, [stompClient, connect, setStompClient]);
 
-  const [user, setUser] = useState(localStorage.getItem('user'));
-  const [gameId, setGameId] = useState(localStorage.getItem('gameId'));
-  const [userId, setUserId] = useState(localStorage.getItem('userId'));
-
-  const createStompClient = async () => {
-    const stompClient = await connect();
-    return stompClient;
-}
-
-
-useEffect(() => {
-  const connectSocket = async () => {
-    const client = await createStompClient();
-    setStompClient(client);
-  };
-  connectSocket();
-}, []);
 
     useEffect(() => {
-      if (stompClient) {
-        const GameSubscription = stompClient.subscribe(
-          `/topic/games/${gameId}/state`,
-          (message) => {
-              const data = JSON.parse(message.body);
-              setPot(data.potAmount);
-              setPlayerList(data.players);
-              setBigBlind(data.bigBlind);
-              setSmallBlind(data.smallBlind);
-              setCallAmount(data.callAmount);
-              setGamePhase(data.gamePhase);
-          }
+      const gameId = location.pathname.split("/")[2];
+      const token = localStorage.getItem("token");
+    // Subscribe to the game
+    let gameSubscription;
+    if (stompClient) {
+      gameSubscription = stompClient.subscribe(
+        `/topic/games/${gameId}/state`,
+        (message) => {
+          const data = JSON.parse(message.body);
+          setPot(data.potAmount);
+          setPlayerList(data.players);
+          setBigBlind(data.bigBlind);
+          setSmallBlind(data.smallBlind);
+          setCallAmount(data.callAmount);
+          setGamePhase(data.gamePhase);
+        }
       );
-        const VideoSubscription  = stompClient.subscribe(
-          `/topic/games/${gameId}/state/video`,
-          (message) => {
-              const data = JSON.parse(message.body);
-              setVideoData({
-                  title: data.title,
-                  thumbnail: data.thumbnail,
-                  releaseDate: data.releaseDate,
-                  likes: data.likes,
-                  length: data.length,
-                  views: data.views
-                });
-              }
-            );
-        const CommentsSubscription = stompClient.subscribe(
-          `/topic/games/${gameId}/players/${token}/hand`,
-          (message) => {
-              const data = JSON.parse(message.body);
-              setComments({
-                  content: data.content,
-                  author: data.author,
-                  date: data.date,
-                  likes: data.likes,
-                  isMatched: data.is_matched
-                });
-              }
-            );
 
+    // Subscribe to the video
+      const videoSubscription = stompClient.subscribe(
+        `/topic/games/${gameId}/state/video`,
+        (message) => {
+          const data = JSON.parse(message.body);
+          setVideoData({
+            title: data.title,
+            thumbnail: data.thumbnail,
+            releaseDate: data.releaseDate,
+            likes: data.likes,
+            length: data.length,
+            views: data.views
+          });
+        }
+      );
+
+        const commentsSubscription = stompClient.subscribe(
+          `/topic/games/${gameId}/players/${token}/hand`,
+            handleCommentsUpdate
+        );
         const decisionSubscription = stompClient.subscribe(
           `/topic/games/${gameId}/players/${token}/decision`,
           (message) => {
-              const data = JSON.parse(message.body);
-              const player = playerList.find(player => player.username === data.username);
-              const decision = player.lastDecision ? player.lastDecision.action : "No decision";
-              const callAmount = player.lastDecision ? player.lastDecision.amount : "N/A";
-              setDecision({
-                  username: player.username,
-                  decision: player.lastDecision,
-                  callAmount: player.callAmount,
-                  score: player.score,
-                  token: player.token
-                });
-              }
-            );
-        const WinnerSubscription = stompClient.subscribe(
-          `/topic/games/${gameId}/winner`,
+            const data = JSON.parse(message.body);
+            setDecision(data);
+          }
+        );
+          
+        const winnerSubscription = stompClient.subscribe(
+          `/topic/games/${gameId}/state/winner`,
           (message) => {
-              const data = JSON.parse(message.body);
-              setWinner({
-                  username: data.username,
-                  score: data.score,
-                  token: data.token
-                });
-              }
-            );
-      const videoSubscription = stompClient.subscribe(
-          `/topic/games/${gameId}/end`,
+            const data = JSON.parse(message.body);
+            setWinner(data);
+          }
+        );
+        const gameEndSubscription = stompClient.subscribe(
+          `/topic/games/${gameId}/state/end`,
           (message) => {
-              const data = JSON.parse(message.body);
-              setGameEnd(true);
-            });
+            const data = JSON.parse(message.body);
+            setGameEnd(data);
+          }
+        );
+        return () => {
+          if (gameSubscription) {
+            gameSubscription.unsubscribe();
+          }
+          if (videoSubscription) {
+            videoSubscription.unsubscribe();
+          }
+          if (commentsSubscription) {
+            commentsSubscription.unsubscribe();
+          }
+          if (decisionSubscription) {
+            decisionSubscription.unsubscribe();
+          }
+          if (winnerSubscription) {
+            winnerSubscription.unsubscribe();
+          }
+          if (gameEndSubscription) {
+            gameEndSubscription.unsubscribe();
+          };
+        };
       }
-    // CLEANUP and Unscribe //
-    return () => {
-      if (stompClient && stompClient.connected) {
-        stompClient.disconnect();
-      }
-      if (gameSubscription) {
-        gameSubscription.unsubscribe();
-      }
-      if (videoSubscription) {
-        videoSubscription.unsubscribe();
-      }
-      if (commentsSubscription) {
-        commentsSubscription.unsubscribe();
-      }
-      if (decisionSubscription) {
-        decisionSubscription.unsubscribe();
-      }
-      if (winnerSubscription) {
-        winnerSubscription.unsubscribe();
-      }
-      if (gameEndSubscription) {
-        gameEndSubscription.unsubscribe();
-      }
-    };
-  }, [stompClient, gameId, token, playerList, gamePhase, callAmount, pot, bigBlind, smallBlind, videoData, comments, decision, winner, gameEnd]);
+    }, [stompClient, location.pathname]);
+
+
 
   const handleDecisionSubmit = () => {
     const gameId = location.pathname.split('/')[2];
@@ -246,6 +212,7 @@ useEffect(() => {
     };
   }, [location.pathname]);
 
+
   return (
     <div className = "game">
       <div className="box">    
@@ -298,21 +265,21 @@ useEffect(() => {
         </div>
       </div>
   
-        <div className="footer">
-          <div className="card-container">
-            {myHand.map((comment, index) => (
-              <div className="card" key={index}>
-                <div className="card-top">
-                  <span>{comment.author}</span>
-                  <i className="fas fa-heart"></i>
-                </div>
-                <div className="card-main">
-                  {comment.content}
-                </div>
-              </div>
-            ))}
+      <div className="footer">
+      <div className="card-container">
+        {comments.map((comment, index) => (
+          <div className="card" key={index}>
+            <div className="card-top">
+              <span>{comment.first.author}</span>
+              <i className="fas fa-heart"></i>
+            </div>
+            <div className="card-main">
+              {comment.first.content}
+            </div>
           </div>
+        ))}
       </div>
+    </div>
             
         {/* end of game section */}
         {gameEnd && <EndOfGame winner={winner} gamePhase={gamePhase} />}
@@ -331,10 +298,7 @@ useEffect(() => {
 
     </div>
     </div>
-);
+  );
 };
 
 export default Game;
-  
-  
-  
