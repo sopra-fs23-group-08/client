@@ -46,6 +46,12 @@ const Game = () => {
     views: ""
   });
 
+  const handleCommentsUpdate = (message) => {
+    const data = JSON.parse(message.body);
+    setComments(data);
+  }
+  
+
   useEffect(() => {
     const createStompClient = async () => {
       const stompClient = await connect();
@@ -96,17 +102,14 @@ const Game = () => {
       );
 
         const commentsSubscription = stompClient.subscribe(
-          `/topic/games/${gameId}/state/comments`,
-          (message) => {
-            const data = JSON.parse(message.body);
-            setComments(data);
-          }
+          `/topic/games/${gameId}/players/${token}/hand`,
+            handleCommentsUpdate
         );
         const decisionSubscription = stompClient.subscribe(
-          `/topic/games/${gameId}/players/${token}/hand`,
+          `/topic/games/${gameId}/players/${token}/decision`,
           (message) => {
             const data = JSON.parse(message.body);
-            setMyHand(data);
+            setDecision(data);
           }
         );
           
@@ -262,21 +265,21 @@ const Game = () => {
         </div>
       </div>
   
-        <div className="footer">
-          <div className="card-container">
-            {myHand.map((comment, index) => (
-              <div className="card" key={index}>
-                <div className="card-top">
-                  <span>{comment.author}</span>
-                  <i className="fas fa-heart"></i>
-                </div>
-                <div className="card-main">
-                  {comment.content}
-                </div>
-              </div>
-            ))}
+      <div className="footer">
+      <div className="card-container">
+        {comments.map((comment, index) => (
+          <div className="card" key={index}>
+            <div className="card-top">
+              <span>{comment.first.author}</span>
+              <i className="fas fa-heart"></i>
+            </div>
+            <div className="card-main">
+              {comment.first.content}
+            </div>
           </div>
+        ))}
       </div>
+    </div>
             
         {/* end of game section */}
         {gameEnd && <EndOfGame winner={winner} gamePhase={gamePhase} />}

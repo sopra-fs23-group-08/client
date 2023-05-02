@@ -149,6 +149,7 @@ const Lobby = () => {
         setBigBlind(settingsData.bigBlind)
         setSmallBlind(settingsData.smallBlind)
     }
+
     const handleRemoteStartGame = (message) => {
         console.log("Received start game message:", message.data);
         setGameStarting(true);
@@ -225,6 +226,7 @@ const Lobby = () => {
                         {},
                         requestBody
                 );
+                
         }
         connectSocket();
 
