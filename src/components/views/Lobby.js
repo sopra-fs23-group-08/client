@@ -168,10 +168,6 @@ const Lobby = () => {
         history.push(`/games/${gameId}`);
       };
       
-      
-    
-      
-      
 
     const handleLeaveGame = () => {
         // remove player from playerList & disconnect WS
