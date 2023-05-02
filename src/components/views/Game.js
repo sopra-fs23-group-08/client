@@ -11,7 +11,7 @@ import { useContext } from 'react';
 
 const Game = () => {
   const location = useLocation();
-  const [playerList, setPlayerList] = useState([]);
+
   const [gamePhase, setGamePhase] = useState(''); //?
   const [winner, setWinner] = useState(null); 
   const [gameEnd, setGameEnd] = useState(false);
@@ -36,6 +36,8 @@ const Game = () => {
   const { setStompClient } = useContext(StompContext);
   const { connect } = useContext(StompContext);
 
+  const [playerList, setPlayerList] = useState([]);
+
   // define state variables for video data
   const [videoData, setVideoData] = useState({
     title: "",
@@ -50,6 +52,13 @@ const Game = () => {
     const data = JSON.parse(message.body);
     setComments(data);
   }
+
+  const handlePlayerListUpdate = (message) => {
+    console.log('message.body:', message.body);
+    const data = JSON.parse(message.body);
+    setPlayerList(data);
+  };
+  
   
 
   useEffect(() => {
@@ -100,11 +109,17 @@ const Game = () => {
           });
         }
       );
-
+      const playerListSubscription = stompClient.subscribe(
+        `/topic/games/${gameId}/players`,
+        handlePlayerListUpdate
+      );
+      
+      //subscribe to the comments
         const commentsSubscription = stompClient.subscribe(
           `/topic/games/${gameId}/players/${token}/hand`,
             handleCommentsUpdate
         );
+        //subscribe to the decision
         const decisionSubscription = stompClient.subscribe(
           `/topic/games/${gameId}/players/${token}/decision`,
           (message) => {
@@ -112,7 +127,7 @@ const Game = () => {
             setDecision(data);
           }
         );
-          
+        //subscribe to the winner 
         const winnerSubscription = stompClient.subscribe(
           `/topic/games/${gameId}/state/winner`,
           (message) => {
@@ -120,6 +135,7 @@ const Game = () => {
             setWinner(data);
           }
         );
+        //subscribe to the game end
         const gameEndSubscription = stompClient.subscribe(
           `/topic/games/${gameId}/state/end`,
           (message) => {
@@ -133,6 +149,9 @@ const Game = () => {
           }
           if (videoSubscription) {
             videoSubscription.unsubscribe();
+          }
+          if (playerListSubscription) {
+            playerListSubscription.unsubscribe();
           }
           if (commentsSubscription) {
             commentsSubscription.unsubscribe();
@@ -175,7 +194,7 @@ const Game = () => {
       const { username, token } = playerList.find(player => player.token === localStorage.getItem('token'));
       stompClient.send(`/app/games/${gameId}/players/remove`, {}, JSON.stringify({ username: username, token: token }));
       // Update player list in front-end
-      setPlayerList((prevPlayerList) => prevPlayerList.filter((player) => player.username !== username));
+      handlePlayerListUpdate((prevPlayerList) => prevPlayerList.filter((player) => player.username !== username));
     };
 
     // confirm leave
@@ -185,7 +204,7 @@ const Game = () => {
       const token = localStorage.getItem('token');
       stompClient.send(`/app/games/${gameId}/players/remove`, {}, JSON.stringify({ username: username, token: token }));
       // Update player list in front-end
-      setPlayerList((prevPlayerList) => prevPlayerList.filter((player) => player.username !== username));
+      handlePlayerListUpdate((prevPlayerList) => prevPlayerList.filter((player) => player.username !== username));
       setShowLeaveModal(false);
       // redirect to home page
       window.location.href = '/home';
@@ -216,25 +235,25 @@ const Game = () => {
   return (
     <div className = "game">
       <div className="box">    
-        <div className="left">
-          <ul className="player-list">
-            {playerList.map((player, index) => (
-            <li key={index}>
-              <a href={player.token ? `/users/${player.username}` : null}>{player.username}</a>
-              {player.lastDecision && (
-                <span>
-                  {player.lastDecision.type === 'call'
-                    ? `Called ${player.lastDecision.amount} points`
-                    : player.lastDecision.type === 'raise'
-                    ? `Raised ${player.lastDecision.amount} points`
-                    : 'Folded'}
-                    , has {player.score} points
-                </span>
-              )}
-            </li>
-          ))}
-        </ul>
-      </div>
+      <div className="left">
+  <ul className="player-list">
+    {playerList.map((player, index) => (
+      <li key={index}>
+        <a href={player.token ? `/users/${player.username}` : null}>{player.username}</a>
+        {player.lastDecision && (
+          <span>
+            {player.lastDecision.type === 'call'
+              ? `Called ${player.lastDecision.amount} points`
+              : player.lastDecision.type === 'raise'
+              ? `Raised ${player.lastDecision.amount} points`
+              : 'Folded'}
+              , has {player.score} points
+          </span>
+        )}
+      </li>
+    ))}
+  </ul>
+</div>
 
   
         <div className="center">
