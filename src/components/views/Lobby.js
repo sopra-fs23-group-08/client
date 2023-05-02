@@ -106,6 +106,7 @@ const Lobby = () => {
     const { user } = useContext(UserContext);
     const { stompClient } = useContext(StompContext);
     const { setStompClient } = useContext(StompContext);
+    const { connect } = useContext(StompContext);
 
     const [gameStarting, setGameStarting] = useState(false);
     const [players, setPlayers] = useState([]);
@@ -125,12 +126,15 @@ const Lobby = () => {
     const [settingsSubscription, setSettingsSubscription] = useState(null);
     // subscribe to game started
     const [gameStartSubscription, setGameStartSubscription] = useState(null);
-
-    /** HANDLER FUNCTIONS */
+    
     const handlePlayerUpdate = (message) => {
         const playerArray = JSON.parse(message.body);
-        setPlayers(playerArray);
-    }
+        console.log("Received player list:", playerArray);
+        // Only update the state if there are changes to the player list
+        if (JSON.stringify(playerArray) !== JSON.stringify(players)) {
+            setPlayers(playerArray);
+        }
+    }      
     const handleSettingsUpdate = (message) => {
         console.log(message.data)
         const settingsData = new SettingsData(message.data)
@@ -141,40 +145,50 @@ const Lobby = () => {
         setSmallBlind(settingsData.smallBlind)
     }
     const handleRemoteStartGame = (message) => {
-        console.log(message.data)
-        setGameStarting(true)
-        // eslint-disable-next-line no-restricted-globals
-        history.push(`/games/${gameId}`)
+        console.log("Received start game message:", message.data);
+        setGameStarting(true);
+        history.push(`/games/${gameId}`);
     }
+    
 
     const handleStartGame = () => {
-        setGameStarting(true); // prevent player being removed from game on unmount
-        stompClient.send(`/app/games/${gameId}/start`, {}); 
+        console.log("handleStartGame called");
+        console.log("gameId:", gameId);
+        setGameStarting(true);
+        stompClient.send(`/app/games/${gameId}/start`, {}, () => {
+          console.log("Sent start game message");
           history.push(`/games/${gameId}`);
-        
-      }
+        });
+      };
+      
+    
+      
       
 
     const handleLeaveGame = () => {
-    // remove player from playerList & disconnect WS
-    const destination = `/app/games/${gameId}/players/leave`
-    const token = localStorage.getItem("token");
-    const name = localStorage.getItem("name");
-    const requestBody = JSON.stringify({ name, token });
-    // TODO catch exceptions somehow
-    if(stompClient) {
+        // remove player from playerList & disconnect WS
+        const destination = `/app/games/${gameId}/players/leave`
+        const token = localStorage.getItem("token");
+        const name = localStorage.getItem("name");
+        const requestBody = JSON.stringify({ name, token });
+        // TODO catch exceptions somehow
         stompClient.send(destination, {}, requestBody);
         // unsub & disconnect
         if(settingsSubscription) settingsSubscription.unsubscribe();
         if(playersSubscription) playersSubscription.unsubscribe();
         if(gameStartSubscription) gameStartSubscription.unsubscribe();
         stompClient.disconnect();
+        history.push("/home");
     }
-    history.push("/home");
-}
+      
+    const createStompClient = async () => {
+        const stompClient = await connect();
+        return stompClient;
+    }
 
     /** ON MOUNT */
     useEffect(() => {
+        
         // check if user is host -> able to modify settings
         const checkHost = async () => {
             const response = await api.get(`/games/${gameId}/host`);
@@ -187,47 +201,47 @@ const Lobby = () => {
         checkHost();
 
         // setup stomp client
-        async function connectSocket() {
-            let socket = new SockJS("http://localhost:8080/sopra-websocket");
-            const client = Stomp.over(socket);
-            client.connect({}, () => {
-                setStompClient(client);
+        const connectSocket = async () => {
+            const stompClient = await createStompClient();
+                setStompClient(stompClient);
+                console.log("Connected to STOMP server");
                 // SUBSCRIPTIONS //
                 setPlayersSubscription(
-                    client.subscribe(`/topic/games/${gameId}/players`, handlePlayerUpdate)
+                    stompClient.subscribe(`/topic/games/${gameId}/players`, handlePlayerUpdate)
                 )
                 setSettingsSubscription(
-                    client.subscribe(`/topic/games/${gameId}/settings`, handleSettingsUpdate)
+                    stompClient.subscribe(`/topic/games/${gameId}/settings`, handleSettingsUpdate)
                 )
                 setGameStartSubscription(
-                    client.subscribe(`/topic/games/${gameId}/start`, handleRemoteStartGame)
+                    stompClient.subscribe(`/topic/games/${gameId}/start`, handleRemoteStartGame)
                 )
                 // ADD PLAYER TO GAME
                 const name = user.name;
                 const token = localStorage.getItem("token");
                 const requestBody = JSON.stringify({name, token});
                 // TODO catch errors somehow - try/catch doesn't work because WS
-                client.send(
+                stompClient.send(
                         `/app/games/${gameId}/players/add`,
                         {},
                         requestBody
-                )
-            });
-            return client;
+                );
         }
-        connectSocket().then((client) => {setStompClient(client)});
+        connectSocket();
+
 
         // CLEANUP //
         return () => {
-            if(gameStarting){
-                gameStartSubscription.unsubscribe();
-                settingsSubscription.unsubscribe();
-                return
+            if (stompClient) {
+                if (gameStartSubscription) gameStartSubscription.unsubscribe();
+                if (settingsSubscription) settingsSubscription.unsubscribe();
+                if (playersSubscription) playersSubscription.unsubscribe();
             }
-            handleLeaveGame()
+            handleLeaveGame();
+            if (stompClient) stompClient.disconnect();
         }
     }, []);
 
+        
 
     /** Dynamic Components */
     let playerList = <PlayerList list={players}/>;
