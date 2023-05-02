@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import StompContext from 'components/contexts/StompContext';
-import "styles/views/TestGame.scss";
+import "styles/views/Game.scss";
 import HowToPlay from 'components/ui/HowToPlay';
 import ShowDown from 'components/ui/ShowDown';
 import EndOfGame from 'components/ui/EndOfGame';
