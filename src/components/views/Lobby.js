@@ -155,11 +155,10 @@ const Lobby = () => {
         console.log("handleStartGame called");
         console.log("gameId:", gameId);
         setGameStarting(true);
-        stompClient.send(`/app/games/${gameId}/start`, {}, () => {
-          console.log("Sent start game message");
-          history.push(`/games/${gameId}`);
-        });
-      };
+        stompClient.send(`/games/${gameId}/start`, {})
+        console.log("Sent start game message");
+        history.push(`/games/${gameId}`);
+    };
       
     
       
