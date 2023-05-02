@@ -76,13 +76,17 @@ const Game = () => {
 }
 
 
-  useEffect(() => {
+useEffect(() => {
+  const connectSocket = async () => {
+    const client = await createStompClient();
+    setStompClient(client);
+  };
+  connectSocket();
+}, []);
 
-    const connectSocket = async () => {
-      const stompClient = await createStompClient();
-          setStompClient(stompClient);
-          // SUBSCRIPTIONS // 
-      setGameSubscription(stompClient.subscribe(
+    useEffect(() => {
+      if (stompClient) {
+        const GameSubscription = stompClient.subscribe(
           `/topic/games/${gameId}/state`,
           (message) => {
               const data = JSON.parse(message.body);
@@ -93,8 +97,8 @@ const Game = () => {
               setCallAmount(data.callAmount);
               setGamePhase(data.gamePhase);
           }
-      ));
-      setVideoSubscription(stompClient.subscribe(
+      );
+        const VideoSubscription  = stompClient.subscribe(
           `/topic/games/${gameId}/state/video`,
           (message) => {
               const data = JSON.parse(message.body);
@@ -105,10 +109,10 @@ const Game = () => {
                   likes: data.likes,
                   length: data.length,
                   views: data.views
-              });
-          }
-      ));
-      setCommentsSubscription(stompClient.subscribe(
+                });
+              }
+            );
+        const CommentsSubscription = stompClient.subscribe(
           `/topic/games/${gameId}/players/${token}/hand`,
           (message) => {
               const data = JSON.parse(message.body);
@@ -118,11 +122,11 @@ const Game = () => {
                   date: data.date,
                   likes: data.likes,
                   isMatched: data.is_matched
-              });
-          }
-      ));
+                });
+              }
+            );
 
-      setDecisionSubscription(stompClient.subscribe(
+        const decisionSubscription = stompClient.subscribe(
           `/topic/games/${gameId}/players/${token}/decision`,
           (message) => {
               const data = JSON.parse(message.body);
@@ -135,10 +139,10 @@ const Game = () => {
                   callAmount: player.callAmount,
                   score: player.score,
                   token: player.token
-              });
-          }
-      ));
-      setWinnerSubscription(stompClient.subscribe(
+                });
+              }
+            );
+        const WinnerSubscription = stompClient.subscribe(
           `/topic/games/${gameId}/winner`,
           (message) => {
               const data = JSON.parse(message.body);
@@ -146,19 +150,16 @@ const Game = () => {
                   username: data.username,
                   score: data.score,
                   token: data.token
-              });
-          }
-      ));
-      setGameEndSubscription(stompClient.subscribe(
+                });
+              }
+            );
+      const videoSubscription = stompClient.subscribe(
           `/topic/games/${gameId}/end`,
           (message) => {
               const data = JSON.parse(message.body);
               setGameEnd(true);
-          }
-      ));
-    }
-    connectSocket();
-
+            });
+      }
     // CLEANUP and Unscribe //
     return () => {
       if (stompClient && stompClient.connected) {

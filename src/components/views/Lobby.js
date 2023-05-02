@@ -126,6 +126,11 @@ const Lobby = () => {
     const [settingsSubscription, setSettingsSubscription] = useState(null);
     // subscribe to game started
     const [gameStartSubscription, setGameStartSubscription] = useState(null);
+
+    const createStompClient = async () => {
+        const stompClient = await connect();
+        return stompClient;
+    }
     
     const handlePlayerUpdate = (message) => {
         const playerArray = JSON.parse(message.body);
@@ -157,9 +162,12 @@ const Lobby = () => {
         setGameStarting(true);
         stompClient.send(`/app/games/${gameId}/start`, {}, () => {
           console.log("Sent start game message");
-          history.push(`/games/${gameId}`);
+        }, (error) => {
+          console.error("Error sending start game message:", error);
         });
+        history.push(`/games/${gameId}`);
       };
+      
       
     
       
@@ -181,10 +189,6 @@ const Lobby = () => {
         history.push("/home");
     }
       
-    const createStompClient = async () => {
-        const stompClient = await connect();
-        return stompClient;
-    }
 
     /** ON MOUNT */
     useEffect(() => {
