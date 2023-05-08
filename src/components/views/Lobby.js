@@ -180,10 +180,6 @@ const Lobby = () => {
         const requestBody = JSON.stringify({ name, token });
         // TODO catch exceptions somehow
         stompClient.send(destination, {}, requestBody);
-        // unsub & disconnect
-        if(settingsSubscription) settingsSubscription.unsubscribe();
-        if(playersSubscription) playersSubscription.unsubscribe();
-        if(gameStartSubscription) gameStartSubscription.unsubscribe();
         history.push("/home");
     }
 
@@ -249,10 +245,10 @@ const Lobby = () => {
         // CLEANUP //
         return async () => {
             // unsubscribe from all subscriptions
-            await playersSubscription.unsubscribe();
-            await settingsSubscription.unsubscribe();
-            await gameStartSubscription.unsubscribe();
-            handleLeaveGame();
+            if(settingsSubscription) await settingsSubscription.unsubscribe();
+            if(playersSubscription) await playersSubscription.unsubscribe();
+            if(gameStartSubscription) await gameStartSubscription.unsubscribe();
+            if(!gameStarting) handleLeaveGame();
         }
     }, []);
 
