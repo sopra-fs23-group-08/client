@@ -82,11 +82,11 @@ const GameSettings = (props) => {
                             onChange={event => props.onLanguageChange(event.target.value)}
                             disabled={!props.isHost}
                             value={props.language}
-                            defaultValue={"en"}
+                            defaultValue={"ENGLISH"}
                         >
-                            <option value="en">ENGLISH</option>
-                            <option value="de">GERMAN</option>
-                            <option value="zh">CHINESE</option>
+                            <option value="ENGLISH">ENGLISH</option>
+                            <option value="GERMAN">GERMAN</option>
+                            <option value="CHINESE">CHINESE</option>
                         </Select>
                     </LabeledSetting>
                     <LabeledSetting label={"Playlist"}>

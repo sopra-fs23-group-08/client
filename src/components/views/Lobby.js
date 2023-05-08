@@ -110,8 +110,8 @@ const Lobby = () => {
     const [isHost, setIsHost] = useState(false);
 
     /** Settings */
-    const [language, setLanguage] = useState("en");
-    const [playlistUrl, setPlaylistUrl] = useState("");
+    const [language, setLanguage] = useState("ENGLISH");
+    const [playlistUrl, setPlaylistUrl] = useState("https://www.youtube.com/watch?v=HnIdtbV_TDU&list=PLjT6ePOFLFf3gHO_fXXmikcipOV3ZLYB0");
     const [initialBalance, setInitialBalance] = useState("3000");
     const [bigBlind, setBigBlind] = useState("100");
     const [smallBlind, setSmallBlind] = useState("50");
