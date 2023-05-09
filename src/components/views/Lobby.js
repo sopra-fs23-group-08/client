@@ -98,18 +98,18 @@ const Lobby = () => {
 
     /** View info */
     const isMounted = useRef(true); // flag to avoid state updates after unmount
-    const classes = useStyles(); // material-ui
+    const gameStarting = useRef(false);
     const history = useHistory();
     const { gameId } = useParams();
-    const [gameStarting, setGameStarting] = useState(false);
+    const classes = useStyles(); // material-ui
 
     /** Users/Host info */
     const { user } = useContext(UserContext);
     const [players, setPlayers] = useState([]);
     const [host, setHost] = useState(null);
-    const [isHost, setIsHost] = useState(false);
+    const isHost = useRef(false);
 
-    /** Settings */
+    /** Settings TODO: remove standard youtube URL --> account for absent/false input */
     const [language, setLanguage] = useState("ENGLISH");
     const [playlistUrl, setPlaylistUrl] = useState("https://www.youtube.com/watch?v=HnIdtbV_TDU&list=PLjT6ePOFLFf3gHO_fXXmikcipOV3ZLYB0");
     const [initialBalance, setInitialBalance] = useState("3000");
@@ -118,43 +118,34 @@ const Lobby = () => {
 
     /** Websocket */
     const { stompClient } = useContext(StompContext);
-    const { setStompClient } = useContext(StompContext);
     const { connect } = useContext(StompContext);
     const [playersSubscription, setPlayersSubscription] = useState(null);
     const [settingsSubscription, setSettingsSubscription] = useState(null);
     const [gameStartSubscription, setGameStartSubscription] = useState(null);
 
     /** Handler functions */
-    const createStompClient = async () => {
-        const stompClient = await connect();
-        return stompClient;
-    }
 
     const handlePlayerUpdate = (message) => {
         const playerArray = JSON.parse(message.body);
-        console.log("Received player list:", playerArray);
         // Only update the state if there are changes to the player list
         if (isMounted.current === true && JSON.stringify(playerArray) !== JSON.stringify(players)) {
             setPlayers(playerArray);
         }
     }
     const handleSettingsUpdate = (message) => {
-        console.log(message.data)
-        const settingsData = new SettingsData(message.data)
-        if(isMounted) {
+        const settingsData = new SettingsData(JSON.parse(message.body))
+        if(isMounted.current) {
             setLanguage(settingsData.language)
             setPlaylistUrl(settingsData.playlistUrl)
             setInitialBalance(settingsData.balance)
-            setBigBlind(settingsData.bigBlind)
-            setSmallBlind(settingsData.smallBlind)
+            setBigBlind(`${settingsData.bigBlind}`)
+            setSmallBlind(`${settingsData.smallBlind}`)
         }
     }
 
     const handleRemoteStartGame = (message) => {
         console.log("Received start game message:", message.data);
-        if (isMounted.current === true) {
-            setGameStarting(true);
-        }
+        gameStarting.current = true;
         isMounted.current = false;
         history.push(`/games/${gameId}`);
     }
@@ -163,9 +154,8 @@ const Lobby = () => {
     const handleStartGame = () => {
         console.log("handleStartGame called");
         console.log("gameId:", gameId);
-        if(isMounted.current === true) {
-            setGameStarting(true);
-        }
+        gameStarting.current = true;
+
         stompClient.send(`/app/games/${gameId}/start`, {}, "start blease");
         isMounted.current = false;
         history.push(`/games/${gameId}`);
@@ -195,40 +185,40 @@ const Lobby = () => {
         stompClient.send(destination, {}, requestBody);
     }
 
-    /** ON MOUNT */
-    useEffect(() => {
+    /** ON MOUNT/DISMOUNT */
+    useEffect(async () => {
         
         // check if user is host -> able to modify settings
         const checkHost = async () => {
+            // check if data is received/parsed correctly
             const response = await api.get(`/games/${gameId}/host`);
             const hostPlayer = new Player(response.data);
             setHost(hostPlayer);
             if (hostPlayer.token === user.token) {
-                setIsHost(true);
+                isHost.current = true;
             }
         }
-        checkHost();
+        await checkHost();
 
         // setup stomp client
         const connectSocket = async () => {
-            const client = await createStompClient();
-                setStompClient(client);
-                console.log("Connected to STOMP server");
+            const client = await connect();
                 // SUBSCRIPTIONS //
                 setPlayersSubscription(
                     client.subscribe(`/topic/games/${gameId}/players`, handlePlayerUpdate)
                 )
-                setSettingsSubscription(
-                    client.subscribe(`/topic/games/${gameId}/settings`, handleSettingsUpdate)
-                )
-                setGameStartSubscription(
-                    client.subscribe(`/topic/games/${gameId}/start`, handleRemoteStartGame)
-                )
-                // ADD PLAYER TO GAME
+                if(!isHost) {
+                    setSettingsSubscription(
+                        client.subscribe(`/topic/games/${gameId}/settings`, handleSettingsUpdate)
+                    )
+                    setGameStartSubscription(
+                        client.subscribe(`/topic/games/${gameId}/start`, handleRemoteStartGame)
+                    )
+                }
+                // ADD USER TO GAME TODO: catch errors somehow - errors are not propagated to the client yet
                 const name = user.name;
                 const token = localStorage.getItem("token");
                 const requestBody = JSON.stringify({name, token});
-                // TODO catch errors somehow - try/catch doesn't work because WS
                 client.send(
                         `/app/games/${gameId}/players/add`,
                         {},
@@ -236,11 +226,7 @@ const Lobby = () => {
                 );
                 
         }
-        connectSocket();
-        if (stompClient) {
-            console.log("there is a stompClient");
-        }
-
+        await connectSocket();
 
         // CLEANUP //
         return async () => {
@@ -248,7 +234,7 @@ const Lobby = () => {
             if(settingsSubscription) await settingsSubscription.unsubscribe();
             if(playersSubscription) await playersSubscription.unsubscribe();
             if(gameStartSubscription) await gameStartSubscription.unsubscribe();
-            if(!gameStarting) handleLeaveGame();
+            if(!gameStarting.current) handleLeaveGame();
         }
     }, []);
 
@@ -261,7 +247,7 @@ const Lobby = () => {
         playerList = <PlayerList list={players}/>;
     }, [players])
 
-    let settings = <GameSettings isHost={isHost}
+    let settings = <GameSettings isHost={isHost.current}
                                  // variables
                                  language={language}
                                  balance={initialBalance}
@@ -279,7 +265,7 @@ const Lobby = () => {
 
     // rerender GameSettings if settings change
     useEffect(() => {
-        settings = <GameSettings isHost={isHost}
+        settings = <GameSettings isHost={isHost.current}
                                 // variables
                                  language={language}
                                  balance={initialBalance}
@@ -294,7 +280,7 @@ const Lobby = () => {
                                  onPlaylistUrlChange={setPlaylistUrl}
                                  onSaveSettings={handleSettingsSave}
         />
-    }, [isHost, language, initialBalance, bigBlind, smallBlind, playlistUrl])
+    }, [isHost.current, language, initialBalance, bigBlind, smallBlind, playlistUrl])
 
     let content = <Spinner/>
 
@@ -307,7 +293,7 @@ const Lobby = () => {
                             {host.name}'s lobby
                         </Typography>
                         <Button variant={"contained"}
-                                disabled={!isHost}
+                                disabled={!isHost.current}
                                 onClick={handleStartGame}
                         >
                             Start Game
@@ -347,5 +333,7 @@ const Lobby = () => {
         </Grid>
     )
 }
+
+// TODO: debug warnings (e.g. input controller/uncontrolled)
 
 export default Lobby;
