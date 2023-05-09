@@ -82,7 +82,6 @@ const GameSettings = (props) => {
                             onChange={event => props.onLanguageChange(event.target.value)}
                             disabled={!props.isHost}
                             value={props.language}
-                            defaultValue={"ENGLISH"}
                         >
                             <option value="ENGLISH">ENGLISH</option>
                             <option value="GERMAN">GERMAN</option>
@@ -121,7 +120,9 @@ const GameSettings = (props) => {
                 </SettingBox>
             </Grid>
             <Grid item xs={3}>
-                <Button onClick={props.onSaveSettings}>
+                <Button onClick={props.onSaveSettings}
+                        disabled={!props.isHost}
+                >
                     Save
                 </Button>
             </Grid>
