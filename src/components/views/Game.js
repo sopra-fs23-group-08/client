@@ -8,6 +8,7 @@ import EndOfGame from 'components/ui/EndOfGame';
 import axios from 'axios';
 import { useContext } from 'react';
 import { useHistory } from 'react-router-dom';
+import { message } from 'antd';
 
 
 
@@ -38,6 +39,9 @@ const Game = () => {
   const { connect } = useContext(StompContext);
 
   const [playerList, setPlayerList] = useState([]);
+
+  const [currentPlayerUsername, setCurrentPlayerUsername] = useState('');
+
   const history = useHistory();
   // define state variables for video data
   // {"title":null,"thumbnailUrl":null,"views":69823295,"likes":656792,"releaseDate":null,"duration":"PT1M48S"}
@@ -76,7 +80,15 @@ const Game = () => {
       setGamePhase(data.gamePhase);
   };
   
-
+  const handleCurrentPlayer = (message) => {
+    const data = JSON.parse(message.body);
+    const currentPlayer = data.find((player) => player.currentPlayer === true);
+    console.log('currentPlayer:', currentPlayer);
+    if (currentPlayer) {
+      setCurrentPlayerUsername(currentPlayer.username);
+    }
+  };
+  
   useEffect(() => {
     const createStompClient = async () => {
       const stompClient = await connect();
@@ -109,8 +121,12 @@ const Game = () => {
       );
       const playerListSubscription = stompClient.subscribe(
         `/topic/games/${gameId}/players`,
-        handlePlayerListUpdate
+        message => {
+          handlePlayerListUpdate(message);
+          handleCurrentPlayer(message);
+        }
       );
+      console.log('playerListSubscription:', playerListSubscription);
       
       //subscribe to the comments
         const commentsSubscription = stompClient.subscribe(
@@ -121,10 +137,12 @@ const Game = () => {
         const decisionSubscription = stompClient.subscribe(
           `/topic/games/${gameId}/players/${token}/decision`,
           (message) => {
-            const data = JSON.parse(message.body);
-            setPlayersDecision(data);
+              console.log('decisionSubscription:', decisionSubscription);
+              const data = JSON.parse(message.body);
+              setPlayersDecision(data);
           }
-        );
+      );
+            
         //subscribe to the winner 
         const winnerSubscription = stompClient.subscribe(
           `/topic/games/${gameId}/state/winner`,
@@ -169,25 +187,30 @@ const Game = () => {
 
 
 
-    const handleDecisionSubmit = (decisionType) => {
+    const handleDecisionSubmit = (decisionType, raiseAmount) => {
       const gameId = location.pathname.split('/')[2];
       const token = localStorage.getItem('token');
-      const decisionValue = parseInt(decisionAmount) || 0;
-      const decisionData = {
-        token: token,
+      const currentPlayer = playerList.find((player) => player.currentPlayer === true);
+      if (currentPlayer.token === token) {
+        const decisionData = {
         decision: decisionType,
-        amount: decisionValue,
-      };
+        raiseAmount: raiseAmount,
+      }
       stompClient.send(`/app/games/${gameId}/players/${token}/decision`, {}, JSON.stringify(decisionData));
+      }else{
+        message.error('It is not your turn!');
+      }
     };
     
     const handleCall = () => {
-      handleDecisionSubmit('call');
+      handleDecisionSubmit('CALL', null);
     };
     
     const handleRaise = () => {
-      handleDecisionSubmit('raise');
+      const raiseAmount = parseInt(decisionAmount) || 0;
+      handleDecisionSubmit('RAISE', raiseAmount);
     };
+    
     
     const handleLeaveGame = () => {
       setShowLeaveModal(true);
@@ -260,6 +283,9 @@ const Game = () => {
 
   
         <div className="center">
+          <div className="announcement-container">
+            <p>Now it's {currentPlayerUsername}'s turn! </p>
+          </div>
           <div className="title">{videoData.title}</div>
           <div className="video-container">
             <div className="thumbnail" style={{ backgroundImage: `url(${videoData.thumbnailUrl})` }}></div>
@@ -269,7 +295,7 @@ const Game = () => {
             <p>Likes: {videoData.likes}</p>
             <p>Views: {videoData.views}</p>
           </div>
-      </div>
+        </div>
 
   
   
