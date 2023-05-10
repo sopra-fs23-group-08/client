@@ -1,8 +1,6 @@
 import {AppBar, Button, Card, CardContent, Grid, Toolbar, Typography} from "@material-ui/core";
-import {useContext, useEffect, useState} from "react";
-import Stomp from "stompjs";
+import {useContext, useEffect, useRef, useState} from "react";
 import {useHistory, useParams} from "react-router-dom";
-import SockJS from "sockjs-client";
 import {api} from "../../helpers/api";
 import PropTypes from "prop-types";
 import {makeStyles} from "@material-ui/core/styles";
@@ -97,62 +95,72 @@ PlayerList.propTypes = {
 }
 
 const Lobby = () => {
-    // maybe start using contexts to pass state
-    // TODO: disconnect from WS endpoint on unmount and send leave game message to WS endpoint
-    // TODO: implement a context for the stompClient & subscriptions
-    const classes = useStyles(); // material-ui
+
+    /** View info */
+    const isMounted = useRef(true); // flag to avoid state updates after unmount
+    const gameStarting = useRef(false);
     const history = useHistory();
     const { gameId } = useParams();
+    const classes = useStyles(); // material-ui
+
+    /** Users/Host info */
     const { user } = useContext(UserContext);
-    const { stompClient } = useContext(StompContext);
-    const { setStompClient } = useContext(StompContext);
-
-    const [gameStarting, setGameStarting] = useState(false);
     const [players, setPlayers] = useState([]);
-
-    // host information
     const [host, setHost] = useState(null);
-    const [isHost, setIsHost] = useState(false);
+    const isHost = useRef(false);
 
-    const [language, setLanguage] = useState("en");
-    const [playlistUrl, setPlaylistUrl] = useState("");
+    /** Settings TODO: remove standard youtube URL --> account for absent/false input */
+    const [language, setLanguage] = useState("ENGLISH");
+    const [playlistUrl, setPlaylistUrl] = useState("https://www.youtube.com/watch?v=HnIdtbV_TDU&list=PLjT6ePOFLFf3gHO_fXXmikcipOV3ZLYB0");
     const [initialBalance, setInitialBalance] = useState("3000");
     const [bigBlind, setBigBlind] = useState("100");
     const [smallBlind, setSmallBlind] = useState("50");
-    // subscribe to player-list updates
+
+    /** Websocket */
+    const { stompClient } = useContext(StompContext);
+    const { connect } = useContext(StompContext);
     const [playersSubscription, setPlayersSubscription] = useState(null);
-    // subscribe to setting updates
     const [settingsSubscription, setSettingsSubscription] = useState(null);
-    // subscribe to game started
     const [gameStartSubscription, setGameStartSubscription] = useState(null);
 
-    /** HANDLER FUNCTIONS */
+    /** Handler functions */
+
     const handlePlayerUpdate = (message) => {
         const playerArray = JSON.parse(message.body);
-        setPlayers(playerArray);
+        // Only update the state if there are changes to the player list
+        if (isMounted.current === true && JSON.stringify(playerArray) !== JSON.stringify(players)) {
+            setPlayers(playerArray);
+        }
     }
     const handleSettingsUpdate = (message) => {
-        console.log(message.data)
-        const settingsData = new SettingsData(message.data)
-        setLanguage(settingsData.language)
-        setPlaylistUrl(settingsData.playlistUrl)
-        setInitialBalance(settingsData.balance)
-        setBigBlind(settingsData.bigBlind)
-        setSmallBlind(settingsData.smallBlind)
-    }
-    const handleRemoteStartGame = (message) => {
-        console.log(message.data)
-        setGameStarting(true)
-        // eslint-disable-next-line no-restricted-globals
-        history.push(`/games/${gameId}`)
+        const settingsData = new SettingsData(JSON.parse(message.body))
+        if(isMounted.current) {
+            setLanguage(settingsData.language)
+            setPlaylistUrl(settingsData.playlistUrl)
+            setInitialBalance(settingsData.balance)
+            setBigBlind(`${settingsData.bigBlind}`)
+            setSmallBlind(`${settingsData.smallBlind}`)
+        }
     }
 
-    const handleStartGame = () => {
-        setGameStarting(true) // prevent player being removed from game on unmount
-        // TODO catch ResponseStatusExceptions thrown by server somehow, try/catch doesn't work(?)
-        stompClient.send(`/games/${gameId}/start`, {})
-        history.push(`/games/${gameId}`)
+    const handleRemoteStartGame = (message) => {
+        console.log("Received start game message:", message.data);
+        gameStarting.current = true;
+        isMounted.current = false;
+        history.push(`/games/${gameId}`);
     }
+
+
+    const handleStartGame = () => {
+        console.log("handleStartGame called");
+        console.log("gameId:", gameId);
+        gameStarting.current = true;
+
+        stompClient.send(`/app/games/${gameId}/start`, {}, "start blease");
+        isMounted.current = false;
+        history.push(`/games/${gameId}`);
+    };
+
 
     const handleLeaveGame = () => {
         // remove player from playerList & disconnect WS
@@ -162,109 +170,117 @@ const Lobby = () => {
         const requestBody = JSON.stringify({ name, token });
         // TODO catch exceptions somehow
         stompClient.send(destination, {}, requestBody);
-        // unsub & disconnect
-        if(settingsSubscription) settingsSubscription.unsubscribe();
-        if(playersSubscription) playersSubscription.unsubscribe();
-        if(gameStartSubscription) gameStartSubscription.unsubscribe();
-        stompClient.disconnect();
         history.push("/home");
     }
 
-    /** ON MOUNT */
-    useEffect(() => {
+    const handleSettingsSave = () => {
+        const destination = `/app/games/${gameId}/settings`;
+        const requestBody = JSON.stringify({
+            language,
+            playlistUrl,
+            initialBalance,
+            bigBlind,
+            smallBlind
+        });
+        stompClient.send(destination, {}, requestBody);
+    }
+
+    /** ON MOUNT/DISMOUNT */
+    useEffect(async () => {
+
         // check if user is host -> able to modify settings
         const checkHost = async () => {
+            // check if data is received/parsed correctly
             const response = await api.get(`/games/${gameId}/host`);
             const hostPlayer = new Player(response.data);
             setHost(hostPlayer);
             if (hostPlayer.token === user.token) {
-                setIsHost(true);
+                isHost.current = true;
             }
         }
-        checkHost();
+        await checkHost();
 
         // setup stomp client
-        async function connectSocket() {
-            let socket = new SockJS("http://localhost:8080/sopra-websocket");
-            const client = Stomp.over(socket);
-            client.connect({}, () => {
-                setStompClient(client);
-                // SUBSCRIPTIONS //
-                setPlayersSubscription(
-                    client.subscribe(`/topic/games/${gameId}/players`, handlePlayerUpdate)
-                )
+        const connectSocket = async () => {
+            const client = await connect();
+            // SUBSCRIPTIONS //
+            setPlayersSubscription(
+                client.subscribe(`/topic/games/${gameId}/players`, handlePlayerUpdate)
+            )
+            if(!isHost) {
                 setSettingsSubscription(
                     client.subscribe(`/topic/games/${gameId}/settings`, handleSettingsUpdate)
                 )
                 setGameStartSubscription(
                     client.subscribe(`/topic/games/${gameId}/start`, handleRemoteStartGame)
                 )
-                // ADD PLAYER TO GAME
-                const name = user.name;
-                const token = localStorage.getItem("token");
-                const requestBody = JSON.stringify({name, token});
-                // TODO catch errors somehow - try/catch doesn't work because WS
-                client.send(
-                        `/app/games/${gameId}/players/add`,
-                        {},
-                        requestBody
-                )
-            });
-            return client;
+            }
+            // ADD USER TO GAME TODO: catch errors somehow - errors are not propagated to the client yet
+            const name = user.name;
+            const token = localStorage.getItem("token");
+            const requestBody = JSON.stringify({name, token});
+            client.send(
+                `/app/games/${gameId}/players/add`,
+                {},
+                requestBody
+            );
+
         }
-        connectSocket().then((client) => {setStompClient(client)});
+        await connectSocket();
 
         // CLEANUP //
-        return () => {
-            if(gameStarting){
-                gameStartSubscription.unsubscribe();
-                settingsSubscription.unsubscribe();
-                return
-            }
-            handleLeaveGame()
+        return async () => {
+            // unsubscribe from all subscriptions
+            if(settingsSubscription) await settingsSubscription.unsubscribe();
+            if(playersSubscription) await playersSubscription.unsubscribe();
+            if(gameStartSubscription) await gameStartSubscription.unsubscribe();
+            if(!gameStarting.current) handleLeaveGame();
         }
     }, []);
 
 
-    /** Dynamic Components */
+
+    /** Realtime Components */
     let playerList = <PlayerList list={players}/>;
     // rerender PlayerList if players change
     useEffect(() => {
         playerList = <PlayerList list={players}/>;
     }, [players])
 
-    let settings = <GameSettings isHost={isHost}
-                                 // variables
+    let settings = <GameSettings isHost={isHost.current}
+        // variables
                                  language={language}
                                  balance={initialBalance}
                                  bigBlind={bigBlind}
                                  smallBlind={smallBlind}
                                  playlistUrl={playlistUrl}
-                                 // setters
-                                 onLanguageChange={l => setLanguage(l)}
-                                 onBalanceChange={b => setInitialBalance(b)}
-                                 onBigBlindChange={b => setBigBlind(b)}
-                                 onSmallBlindChange={s => setSmallBlind(s)}
-                                 onPlaylistUrlChange={p => setPlaylistUrl(p)}
+        // setters
+                                 onLanguageChange={setLanguage}
+                                 onBalanceChange={setInitialBalance}
+                                 onBigBlindChange={setBigBlind}
+                                 onSmallBlindChange={setSmallBlind}
+                                 onPlaylistUrlChange={setPlaylistUrl}
+                                 onSaveSettings={handleSettingsSave}
     />;
 
-
+    // rerender GameSettings if settings change
     useEffect(() => {
-        settings = <GameSettings isHost={isHost}
-                                // variables
+        settings = <GameSettings isHost={isHost.current}
+            // variables
                                  language={language}
                                  balance={initialBalance}
                                  bigBlind={bigBlind}
                                  smallBlind={smallBlind}
                                  playlistUrl={playlistUrl}
-                                // setters
-                                 onLanguageChange={l => setLanguage(l)}
-                                 onBalanceChange={b => setInitialBalance(b)}
-                                 onBigBlindChange={b => setBigBlind(b)}
-                                 onSmallBlindChange={s => setSmallBlind(s)}
-                                 onPlaylistUrlChange={p => setPlaylistUrl(p)}
+            // setters
+                                 onLanguageChange={setLanguage}
+                                 onBalanceChange={setInitialBalance}
+                                 onBigBlindChange={setBigBlind}
+                                 onSmallBlindChange={setSmallBlind}
+                                 onPlaylistUrlChange={setPlaylistUrl}
+                                 onSaveSettings={handleSettingsSave}
         />
-    }, [isHost, language, initialBalance, bigBlind, smallBlind, playlistUrl])
+    }, [isHost.current, language, initialBalance, bigBlind, smallBlind, playlistUrl])
 
     let content = <Spinner/>
 
@@ -277,7 +293,7 @@ const Lobby = () => {
                             {host.name}'s lobby
                         </Typography>
                         <Button variant={"contained"}
-                                disabled={!isHost}
+                                disabled={!isHost.current}
                                 onClick={handleStartGame}
                         >
                             Start Game
@@ -317,5 +333,7 @@ const Lobby = () => {
         </Grid>
     )
 }
+
+// TODO: debug warnings (e.g. input controller/uncontrolled)
 
 export default Lobby;

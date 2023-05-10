@@ -1,5 +1,6 @@
 import {makeStyles} from "@material-ui/core/styles";
 import {AppBar, Card, CardContent, Grid, Select, TextField, Typography} from "@material-ui/core";
+import {Button} from "./Button";
 import PropTypes from "prop-types";
 
 const useStyles = makeStyles((theme) => ({
@@ -81,11 +82,11 @@ const GameSettings = (props) => {
                             onChange={event => props.onLanguageChange(event.target.value)}
                             disabled={!props.isHost}
                             value={props.language}
-                            defaultValue={"en"}
+                            defaultValue={"ENGLISH"}
                         >
-                            <option value="en">ENGLISH</option>
-                            <option value="de">GERMAN</option>
-                            <option value="zh">CHINESE</option>
+                            <option value="ENGLISH">ENGLISH</option>
+                            <option value="GERMAN">GERMAN</option>
+                            <option value="CHINESE">CHINESE</option>
                         </Select>
                     </LabeledSetting>
                     <LabeledSetting label={"Playlist"}>
@@ -119,6 +120,13 @@ const GameSettings = (props) => {
                     </LabeledSetting>
                 </SettingBox>
             </Grid>
+            <Grid item xs={3}>
+                <Button onClick={props.onSaveSettings}
+                        disabled={!props.isHost}
+                >
+                    Save
+                </Button>
+            </Grid>
         </Grid>
     )
 
@@ -135,9 +143,8 @@ GameSettings.propTypes = {
     onBalanceChange: PropTypes.func,
     onBigBlindChange: PropTypes.func,
     onSmallBlindChange: PropTypes.func,
-    onPlaylistUrlChange: PropTypes.func
+    onPlaylistUrlChange: PropTypes.func,
+    onSaveSettings: PropTypes.func
 }
-
-// onStartInfoChange: setStartInfo(event.target.checked)
 
 export default GameSettings
