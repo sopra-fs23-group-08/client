@@ -121,7 +121,9 @@ const GameSettings = (props) => {
                 </SettingBox>
             </Grid>
             <Grid item xs={3}>
-                <Button onClick={props.onSaveSettings}>
+                <Button onClick={props.onSaveSettings}
+                        disabled={!props.isHost}
+                >
                     Save
                 </Button>
             </Grid>
