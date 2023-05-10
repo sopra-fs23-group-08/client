@@ -40,13 +40,14 @@ const Game = () => {
   const [playerList, setPlayerList] = useState([]);
   const history = useHistory();
   // define state variables for video data
+  // {"title":null,"thumbnailUrl":null,"views":69823295,"likes":656792,"releaseDate":null,"duration":"PT1M48S"}
   const [videoData, setVideoData] = useState({
     title: "",
-    thumbnail: "",
-    releaseDate: "",
+    thumbnailUrl: "",
+    views: "",
     likes: "",
-    length: "",
-    views: ""
+    releaseDate: "",
+    duration: "",
   });
 
   const handleCommentsUpdate = (message) => {
@@ -55,10 +56,10 @@ const Game = () => {
   }
 
   const handlePlayerListUpdate = (message) => {
-    console.log('message.body:', message.body);
     const data = JSON.parse(message.body);
     setPlayerList(data);
   };
+  
   
   const handleVideoDataUpdate = (message) => {
     const data = JSON.parse(message.body);
@@ -234,33 +235,37 @@ const Game = () => {
     <div className = "game">
       <div className="box">    
       <div className="left">
-  <ul className="player-list">
-    {playerList.map((player, index) => (
-      <li key={index}>
-        <a href={player.token ? `/users/${player.username}` : null}>{player.username}</a>
-        {player.lastDecision && (
-          <span>
-            {player.lastDecision.type === 'call'
-              ? `Called ${player.lastDecision.amount} points`
-              : player.lastDecision.type === 'raise'
-              ? `Raised ${player.lastDecision.amount} points`
-              : 'Folded'}
-              , has {player.score} points
-          </span>
-        )}
-      </li>
-    ))}
-  </ul>
-</div>
+      <ul className="player-list">
+  {playerList?.length > 0 && playerList.map((player, index) => (
+    <li key={index}>
+      <a href={player.token ? `/users/${player.username}` : null}>{player.username}</a>
+      <div>Score: {player.score}</div>
+      {player.lastDecision && (
+        <div>
+          Last decision: {player.lastDecision === "NOT_DECIDED"
+            ? "Not decided"
+            : player.lastDecision.type === "call"
+            ? `Called ${player.lastDecision.amount} points`
+            : player.lastDecision.type === "raise"
+            ? `Raised ${player.lastDecision.amount} points`
+            : "Folded"
+          }
+        </div>
+)}
+    </li>
+  ))}
+</ul>
+      </div>
+
 
   
         <div className="center">
           <div className="title">{videoData.title}</div>
           <div className="video-container">
-            <div className="thumbnail" style={{ backgroundImage: `url(${videoData.thumbnail})` }}></div>
+            <div className="thumbnail" style={{ backgroundImage: `url(${videoData.thumbnailUrl})` }}></div>
           </div>
           <div className="stats">
-            <p>Date: {videoData.releaseDate}</p>
+            <p>Release Date: {videoData.releaseDate}</p>
             <p>Likes: {videoData.likes}</p>
             <p>Views: {videoData.views}</p>
           </div>
