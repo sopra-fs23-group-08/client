@@ -70,6 +70,7 @@ const GuestHomepage = () => {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [LobbyID, setLobbyID] = useState([""]);
     const { user } = useContext(UserContext);
+    const [showHowToPlay, setShowHowToPlay] = useState(false);
 
     const createGame = async () => {
         console.log("Creating game...");
@@ -95,9 +96,14 @@ const GuestHomepage = () => {
 
     const handleLobbyIDChange = (e) => {setLobbyID(e.target.value)}
 
+    const toggleHowToPlay = () => {
+        setShowHowToPlay(!showHowToPlay);
+      };
+
     const toggleDialog = () => {
         setDialogOpen(!dialogOpen);
     }
+
 
     return (
         <Grid container
@@ -119,7 +125,9 @@ const GuestHomepage = () => {
                             <Typography className={classes.headerTitle}>
                                 Playing as {user.name}
                             </Typography>
-                            <HowToPlay/>
+                            <button color = {'inherit'}  onClick={toggleHowToPlay}>How to Play</button>
+                                {/* Show how to play window when "help" button is clicked */}
+                                {showHowToPlay && <HowToPlay handleClose={() => setShowHowToPlay(false)} />}
                         </Toolbar>
                     </AppBar>
 
@@ -127,9 +135,7 @@ const GuestHomepage = () => {
                           className={classes.cardContainer}
                     >
                         <Grid item>
-                            <Tooltip aria-
-                                title={'Join Game'}
-                                >
+                            <Tooltip title={'Join Game'}>
                                 <IconButton onClick={toggleDialog} className={classes.button} style={{ color: 'black' }} aria-hidden = {false}>
                                     <InputIcon className={classes.menuIcon} aria-hidden = {false}/>
                                 </IconButton>

@@ -19,31 +19,23 @@ const HowToPlay = (props) => {
   HowToPlay.propTypes = {
     color: PropTypes.string
   }
-  const [open, setOpen] = useState(false);
-
-  const handleClickOpen = () => {
-    setOpen(true);
-  };
+  const [open, setOpen] = useState(true);
 
   const handleClose = () => {
     setOpen(false);
+    props.handleClose();
   };
 
   useEffect(() => {
     const timeout = setTimeout(() => {
       setOpen(false);
+      props.handleClose();
     }, 15000);
     return () => clearTimeout(timeout);
-  }, [open]);
+  }, [props]);
 
   return (
     <div>
-      <Button onClick={handleClickOpen}
-              variant={'outlined'}
-              color={'inherit'}
-      >
-        How to Play
-      </Button>
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>How to Play</DialogTitle>
         <DialogContent dividers>

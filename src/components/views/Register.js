@@ -6,7 +6,7 @@ import 'styles/views/Register.scss';
 import logo from 'styles/assets/logo.png'
 import {useState} from "react";
 import {useHistory} from "react-router-dom";
-import {api} from "../../helpers/api";
+import {api, handleError} from 'helpers/api';
 import User from "../../models/User";
 
 const Register = () => {
@@ -17,7 +17,7 @@ const Register = () => {
     const [passwordMatch, setPasswordMatch] = useState(false);
 
     const doRegister = async () => {
-        /*
+        
         try {
             const requestBody = JSON.stringify({username, password});
             const response = await api.post('/users', requestBody);
@@ -30,17 +30,12 @@ const Register = () => {
 
             // Login successfully worked --> navigate to the route /game in the GameRouter
             history.push(`/home`);
-        }
-        catch (error) {
-            if(error.response.status === 409)
-            {
-                alert(`${error.response.data.message}`)
-            }
-            else{
-                alert(`Something went wrong`);
-            }
-        }
-        */
+        }   catch (error) {
+            alert(`Something went wrong during the sign up: \n${handleError(error)}`);
+            window.location.reload();
+      
+          }
+        
     };
 
     return (
@@ -67,7 +62,8 @@ const Register = () => {
                         <div className="register form button-container">
                             <Button
                                 disabled={!username || !password || !passwordMatch}
-                                onClick={() => console.log(username+password)}
+                                onClick={() => doRegister()}
+
                             >
                                 Create Account
                             </Button>
