@@ -3,13 +3,13 @@ import {useContext, useEffect, useRef, useState} from "react";
 import {useHistory, useParams} from "react-router-dom";
 import {api} from "../../helpers/api";
 import PropTypes from "prop-types";
-import {makeStyles} from "@material-ui/core/styles";
+import { makeStyles } from "@material-ui/core/styles";
 import IconButton from "@material-ui/core/IconButton";
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import GameSettings from "../ui/GameSettings";
 import Player from "../../models/Player";
 import SettingsData from "../../models/SettingsData";
-import {Spinner} from "../ui/Spinner";
+import { Spinner } from "../ui/Spinner";
 import UserContext from "../contexts/UserContext";
 import StompContext from "../contexts/StompContext";
 
@@ -173,8 +173,33 @@ const Lobby = () => {
         history.push("/home");
     }
 
-    const handleSettingsSave = () => {
+    function isPositiveInteger(n) {
+        return n >>> 0 && parseInt(n);
+    }
+
+    const handleSettingsSave = async () => {
         const destination = `/app/games/${gameId}/settings`;
+        if(!(isPositiveInteger(initialBalance) && isPositiveInteger(bigBlind) && isPositiveInteger(smallBlind))) {
+            alert("The blinds and initial balance must be positive, whole numbers.");
+            return;
+        }
+        // check if playlistUrl is a valid YouTube playlist
+        try {
+            const requestBody = JSON.stringify({playlistUrl});
+            await api.put(`/games/${gameId}/settings/playlist`, requestBody);
+        }
+        catch (error) {
+            const response = error.response;
+
+            if(response.status === 400) {
+                alert(`${response.data.message}`);
+            }
+            else {
+                alert(`Something unexpected went wrong while saving your settings. Please try again.`);
+            }
+            return;
+        }
+
         const requestBody = JSON.stringify({
             language,
             playlistUrl,
@@ -182,11 +207,12 @@ const Lobby = () => {
             bigBlind,
             smallBlind
         });
+
         stompClient.send(destination, {}, requestBody);
     }
 
     /** ON MOUNT/DISMOUNT */
-    useEffect(async () => {
+    useEffect(() => {
         // check if user is host -> able to modify settings
         const checkHost = async () => {
             // check if data is received/parsed correctly
@@ -197,7 +223,7 @@ const Lobby = () => {
                 isHost.current = true;
             }
         }
-        await checkHost();
+        checkHost();
 
         // setup stomp client
         const connectSocket = async () => {
@@ -215,7 +241,7 @@ const Lobby = () => {
                     client.subscribe(`/topic/games/${gameId}/start`, handleRemoteStartGame)
                 )
             }
-            // ADD USER TO GAME TODO: catch errors somehow - errors are not propagated to the client yet
+            // TODO: catch errors somehow - WS errors are not propagated to the client yet
             const name = user.name;
             const token = localStorage.getItem("token");
             const requestBody = JSON.stringify({name, token});
@@ -225,7 +251,7 @@ const Lobby = () => {
                 requestBody
             );
         }
-        await connectSocket();
+        connectSocket();
 
         // CLEANUP //
         return async () => {
@@ -241,7 +267,9 @@ const Lobby = () => {
 
     /** Realtime Components */
     let playerList = <PlayerList list={players}/>;
+
     // rerender PlayerList if players change
+    // this might be unneccessary, --> the component is rerendered when player is changed anyway
     useEffect(() => {
         playerList = <PlayerList list={players}/>;
     }, [players])
