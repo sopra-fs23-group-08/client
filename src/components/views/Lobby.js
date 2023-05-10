@@ -149,7 +149,7 @@ const Lobby = () => {
         isMounted.current = false;
         history.push(`/games/${gameId}`);
     }
-    
+
 
     const handleStartGame = () => {
         console.log("handleStartGame called");
@@ -160,7 +160,7 @@ const Lobby = () => {
         isMounted.current = false;
         history.push(`/games/${gameId}`);
     };
-      
+
 
     const handleLeaveGame = () => {
         // remove player from playerList & disconnect WS
@@ -187,7 +187,6 @@ const Lobby = () => {
 
     /** ON MOUNT/DISMOUNT */
     useEffect(async () => {
-        
         // check if user is host -> able to modify settings
         const checkHost = async () => {
             // check if data is received/parsed correctly
@@ -203,28 +202,28 @@ const Lobby = () => {
         // setup stomp client
         const connectSocket = async () => {
             const client = await connect();
-                // SUBSCRIPTIONS //
-                setPlayersSubscription(
-                    client.subscribe(`/topic/games/${gameId}/players`, handlePlayerUpdate)
+
+            // SUBSCRIPTIONS //
+            setPlayersSubscription(
+                client.subscribe(`/topic/games/${gameId}/players`, handlePlayerUpdate)
+            )
+            if(!isHost) {
+                setSettingsSubscription(
+                    client.subscribe(`/topic/games/${gameId}/settings`, handleSettingsUpdate)
                 )
-                if(!isHost) {
-                    setSettingsSubscription(
-                        client.subscribe(`/topic/games/${gameId}/settings`, handleSettingsUpdate)
-                    )
-                    setGameStartSubscription(
-                        client.subscribe(`/topic/games/${gameId}/start`, handleRemoteStartGame)
-                    )
-                }
-                // ADD USER TO GAME TODO: catch errors somehow - errors are not propagated to the client yet
-                const name = user.name;
-                const token = localStorage.getItem("token");
-                const requestBody = JSON.stringify({name, token});
-                client.send(
-                        `/app/games/${gameId}/players/add`,
-                        {},
-                        requestBody
-                );
-                
+                setGameStartSubscription(
+                    client.subscribe(`/topic/games/${gameId}/start`, handleRemoteStartGame)
+                )
+            }
+            // ADD USER TO GAME TODO: catch errors somehow - errors are not propagated to the client yet
+            const name = user.name;
+            const token = localStorage.getItem("token");
+            const requestBody = JSON.stringify({name, token});
+            client.send(
+                `/app/games/${gameId}/players/add`,
+                {},
+                requestBody
+            );
         }
         await connectSocket();
 
@@ -238,7 +237,7 @@ const Lobby = () => {
         }
     }, []);
 
-        
+
 
     /** Realtime Components */
     let playerList = <PlayerList list={players}/>;
@@ -254,7 +253,7 @@ const Lobby = () => {
                                  bigBlind={bigBlind}
                                  smallBlind={smallBlind}
                                  playlistUrl={playlistUrl}
-                                 // setters
+        // setters
                                  onLanguageChange={setLanguage}
                                  onBalanceChange={setInitialBalance}
                                  onBigBlindChange={setBigBlind}
@@ -266,6 +265,7 @@ const Lobby = () => {
     // rerender GameSettings if settings change
     useEffect(() => {
         settings = <GameSettings isHost={isHost.current}
+
                                 // variables
                                  language={language}
                                  balance={initialBalance}
