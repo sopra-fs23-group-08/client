@@ -82,7 +82,6 @@ const GameSettings = (props) => {
                             onChange={event => props.onLanguageChange(event.target.value)}
                             disabled={!props.isHost}
                             value={props.language}
-                            defaultValue={"ENGLISH"}
                         >
                             <option value="ENGLISH">ENGLISH</option>
                             <option value="GERMAN">GERMAN</option>

@@ -8,6 +8,9 @@ export const StompContext = createContext({
   isConnected: false,
 });
 
+// TODO: fix useEffects, they don't work as commented
+// TODO: use useRef for isConnected and maybe stompClient
+// TODO: remove setStompClient from context --> clients don't need to set it, they connect via this context
 export const StompProvider = ({ children }) => {
   const [stompClient, setStompClient] = useState(null);
   const [isConnected, setIsConnected] = useState(false);

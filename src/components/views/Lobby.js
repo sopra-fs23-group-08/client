@@ -187,7 +187,6 @@ const Lobby = () => {
 
     /** ON MOUNT/DISMOUNT */
     useEffect(async () => {
-
         // check if user is host -> able to modify settings
         const checkHost = async () => {
             // check if data is received/parsed correctly
@@ -203,6 +202,7 @@ const Lobby = () => {
         // setup stomp client
         const connectSocket = async () => {
             const client = await connect();
+
             // SUBSCRIPTIONS //
             setPlayersSubscription(
                 client.subscribe(`/topic/games/${gameId}/players`, handlePlayerUpdate)
@@ -224,7 +224,6 @@ const Lobby = () => {
                 {},
                 requestBody
             );
-
         }
         await connectSocket();
 
@@ -248,7 +247,7 @@ const Lobby = () => {
     }, [players])
 
     let settings = <GameSettings isHost={isHost.current}
-        // variables
+                                 // variables
                                  language={language}
                                  balance={initialBalance}
                                  bigBlind={bigBlind}
@@ -266,13 +265,14 @@ const Lobby = () => {
     // rerender GameSettings if settings change
     useEffect(() => {
         settings = <GameSettings isHost={isHost.current}
-            // variables
+
+                                // variables
                                  language={language}
                                  balance={initialBalance}
                                  bigBlind={bigBlind}
                                  smallBlind={smallBlind}
                                  playlistUrl={playlistUrl}
-            // setters
+                                // setters
                                  onLanguageChange={setLanguage}
                                  onBalanceChange={setInitialBalance}
                                  onBigBlindChange={setBigBlind}
