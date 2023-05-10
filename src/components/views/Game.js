@@ -9,19 +9,21 @@ import { connect } from 'net';
 import axios from 'axios';
 import SockJS from 'sockjs-client';
 import { useContext } from 'react';
+import { useHistory } from 'react-router-dom';
+
 
 
 const Game = () => {
   const location = useLocation();
-  const [playerList, setPlayerList] = useState([]);
+
   const [gamePhase, setGamePhase] = useState(''); //?
   const [winner, setWinner] = useState(null); 
   const [gameEnd, setGameEnd] = useState(false);
-  const [video, setVideo] = useState({});  //?
   const [pot, setPot] = useState(0);
+  const [decisionAmount, setDecisionAmount] = useState(0);
   const [callAmount, setCallAmount] = useState(0);
   const [myHand, setMyHand] = useState([]);
-  const [decision, setDecision] = useState('fold');//?
+  const [playersDecision, setPlayersDecision] = useState([]);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [showShowDown, setShowShowDown] = useState(false);
   const [comments, setComments] = useState([]);
@@ -29,7 +31,6 @@ const Game = () => {
 
   const [bigBlind, setBigBlind] = useState(0);
   const [smallBlind, setSmallBlind] = useState(0);
-  const [handleHelpClick, setHandleHelpClick] = useState(false);
   const [handleShowDown, setHandleShowDown] = useState(false);
   const [handleEndOfGame, setHandleEndOfGame] = useState(false);
   const [token, setToken] = useState(localStorage.getItem('token'));
@@ -38,16 +39,44 @@ const Game = () => {
   const { setStompClient } = useContext(StompContext);
   const { connect } = useContext(StompContext);
 
+  const [playerList, setPlayerList] = useState([]);
+  const history = useHistory();
   // define state variables for video data
+  // {"title":null,"thumbnailUrl":null,"views":69823295,"likes":656792,"releaseDate":null,"duration":"PT1M48S"}
   const [videoData, setVideoData] = useState({
     title: "",
-    thumbnail: "",
-    releaseDate: "",
+    thumbnailUrl: "",
+    views: "",
     likes: "",
-    length: "",
-    views: ""
+    releaseDate: "",
+    duration: "",
   });
 
+  const handleCommentsUpdate = (message) => {
+    const data = JSON.parse(message.body);
+    setComments(data);
+  }
+
+  const handlePlayerListUpdate = (message) => {
+    const data = JSON.parse(message.body);
+    setPlayerList(data);
+  };
+  
+  
+  const handleVideoDataUpdate = (message) => {
+    const data = JSON.parse(message.body);
+    setVideoData(data);
+  };
+
+  const handleGameUpdate = (message) => {
+    const data = JSON.parse(message.body);
+      setPot(data.potAmount);
+      setPlayerList(data.players);
+      setBigBlind(data.bigBlind);
+      setSmallBlind(data.smallBlind);
+      setCallAmount(data.callAmount);
+      setGamePhase(data.gamePhase);
+  };
   
   // subscribe to player-list updates
   const [playersSubscription, setPlayersSubscription] = useState(null);
@@ -69,32 +98,43 @@ const Game = () => {
   const [gameId, setGameId] = useState(localStorage.getItem('gameId'));
   const [userId, setUserId] = useState(localStorage.getItem('userId'));
 
-  const createStompClient = async () => {
-    const stompClient = await connect();
-    return stompClient;
-}
+    useEffect(() => {
+      const gameId = location.pathname.split("/")[2];
+      const token = localStorage.getItem("token");
+    // Subscribe to the game
+    let gameSubscription;
+    if (stompClient) {
+      gameSubscription = stompClient.subscribe(
+        `/topic/games/${gameId}/state`,
+        handleGameUpdate
+      );
 
-
-  useEffect(() => {
-
-    const connectSocket = async () => {
-      const stompClient = await createStompClient();
-          setStompClient(stompClient);
-          // SUBSCRIPTIONS // 
-      setGameSubscription(stompClient.subscribe(
-          `/topic/games/${gameId}/state`,
+    // Subscribe to the video
+      const videoSubscription = stompClient.subscribe(
+        `/topic/games/${gameId}/video`,
+        handleVideoDataUpdate
+      );
+      const playerListSubscription = stompClient.subscribe(
+        `/topic/games/${gameId}/players`,
+        handlePlayerListUpdate
+      );
+      
+      //subscribe to the comments
+        const commentsSubscription = stompClient.subscribe(
+          `/topic/games/${gameId}/players/${token}/hand`,
+            handleCommentsUpdate
+        );
+        //subscribe to the decision
+        const decisionSubscription = stompClient.subscribe(
+          `/topic/games/${gameId}/players/${token}/decision`,
           (message) => {
-              const data = JSON.parse(message.body);
-              setPot(data.potAmount);
-              setPlayerList(data.players);
-              setBigBlind(data.bigBlind);
-              setSmallBlind(data.smallBlind);
-              setCallAmount(data.callAmount);
-              setGamePhase(data.gamePhase);
+            const data = JSON.parse(message.body);
+            setPlayersDecision(data);
           }
-      ));
-      setVideoSubscription(stompClient.subscribe(
-          `/topic/games/${gameId}/state/video`,
+        );
+        //subscribe to the winner 
+        const winnerSubscription = stompClient.subscribe(
+          `/topic/games/${gameId}/state/winner`,
           (message) => {
               const data = JSON.parse(message.body);
               setVideoData({
@@ -106,9 +146,11 @@ const Game = () => {
                   views: data.views
               });
           }
-      ));
-      setCommentsSubscription(stompClient.subscribe(
-          `/topic/games/${gameId}/players/${token}/hand`,
+        );
+        //subscribe to the game end
+        const gameEndSubscription = stompClient.subscribe(
+          `/topic/games/${gameId}/state/end`,
+
           (message) => {
               const data = JSON.parse(message.body);
               setComments({
@@ -119,22 +161,14 @@ const Game = () => {
                   isMatched: data.is_matched
               });
           }
-      ));
-
-      setDecisionSubscription(stompClient.subscribe(
-          `/topic/games/${gameId}/players/${token}/decision`,
-          (message) => {
-              const data = JSON.parse(message.body);
-              const player = playerList.find(player => player.username === data.username);
-              const decision = player.lastDecision ? player.lastDecision.action : "No decision";
-              const callAmount = player.lastDecision ? player.lastDecision.amount : "N/A";
-              setDecision({
-                  username: player.username,
-                  decision: player.lastDecision,
-                  callAmount: player.callAmount,
-                  score: player.score,
-                  token: player.token
-              });
+          if (videoSubscription) {
+            videoSubscription.unsubscribe();
+          }
+          if (playerListSubscription) {
+            playerListSubscription.unsubscribe();
+          }
+          if (commentsSubscription) {
+            commentsSubscription.unsubscribe();
           }
       ));
       setWinnerSubscription(stompClient.subscribe(
@@ -184,30 +218,28 @@ const Game = () => {
     };
   }, [stompClient, gameId, token, playerList, gamePhase, callAmount, pot, bigBlind, smallBlind, videoData, comments, decision, winner, gameEnd]);
 
-  const handleDecisionSubmit = () => {
-    const gameId = location.pathname.split('/')[2];
-    let decisionValue;
-    if (decision === 'raise') {
-      decisionValue = parseInt(callAmount);
-    } else if (decision === 'call') {
-      decisionValue = parseInt(callAmount);
-    } else {
-      decisionValue = 0;
-    }
-    const decisionData = {
-      decision: decision,
-      amount: decisionValue,
+    const handleDecisionSubmit = (decisionType) => {
+      const gameId = location.pathname.split('/')[2];
+      const token = localStorage.getItem('token');
+      const decisionValue = parseInt(decisionAmount) || 0;
+      const decisionData = {
+        token: token,
+        decision: decisionType,
+        amount: decisionValue,
+      };
+      stompClient.send(`/app/games/${gameId}/players/${token}/decision`, {}, JSON.stringify(decisionData));
     };
-    stompClient.send(`/app/games/${gameId}/players/${localStorage.getItem('token')}/decision`, {}, JSON.stringify(decisionData));
-  };
-
+    
+    const handleCall = () => {
+      handleDecisionSubmit('call');
+    };
+    
+    const handleRaise = () => {
+      handleDecisionSubmit('raise');
+    };
+    
     const handleLeaveGame = () => {
       setShowLeaveModal(true);
-      const gameId = location.pathname.split('/')[2];
-      const { username, token } = playerList.find(player => player.token === localStorage.getItem('token'));
-      stompClient.send(`/app/games/${gameId}/players/remove`, {}, JSON.stringify({ username: username, token: token }));
-      // Update player list in front-end
-      setPlayerList((prevPlayerList) => prevPlayerList.filter((player) => player.username !== username));
     };
 
     // confirm leave
@@ -217,18 +249,22 @@ const Game = () => {
       const token = localStorage.getItem('token');
       stompClient.send(`/app/games/${gameId}/players/remove`, {}, JSON.stringify({ username: username, token: token }));
       // Update player list in front-end
-      setPlayerList((prevPlayerList) => prevPlayerList.filter((player) => player.username !== username));
+      handlePlayerListUpdate((prevPlayerList) => prevPlayerList.filter((player) => player.username !== username));
       setShowLeaveModal(false);
       // redirect to home page
-      window.location.href = '/home';
+      console.log('history:', history);
+      history.push('/home');
     };
     // cancel leave
     const handleCancelLeave = () => {
       setShowLeaveModal(false);
     };
 
-  
-  useEffect(() => {
+    const handleHelpClick = () => {
+      setShowHowToPlay(true);
+    };
+
+    // handle winner
     const handleGameEnd = (gameEndMessage) => {
       setWinner(gameEndMessage.winner);
       setGamePhase(gameEndMessage.gamePhase);
@@ -242,39 +278,42 @@ const Game = () => {
     const handleCloseShowDown = () => {
       setShowShowDown(false);
     };
-  }, [location.pathname]);
 
   return (
     <div className = "game">
       <div className="box">    
-        <div className="left">
-          <ul className="player-list">
-            {playerList.map((player, index) => (
-            <li key={index}>
-              <a href={player.token ? `/users/${player.username}` : null}>{player.username}</a>
-              {player.lastDecision && (
-                <span>
-                  {player.lastDecision.type === 'call'
-                    ? `Called ${player.lastDecision.amount} points`
-                    : player.lastDecision.type === 'raise'
-                    ? `Raised ${player.lastDecision.amount} points`
-                    : 'Folded'}
-                    , has {player.score} points
-                </span>
-              )}
-            </li>
-          ))}
-        </ul>
+      <div className="left">
+      <ul className="player-list">
+  {playerList?.length > 0 && playerList.map((player, index) => (
+    <li key={index}>
+      <a href={player.token ? `/users/${player.username}` : null}>{player.username}</a>
+      <div>Score: {player.score}</div>
+      {player.lastDecision && (
+        <div>
+          Last decision: {player.lastDecision === "NOT_DECIDED"
+            ? "Not decided"
+            : player.lastDecision.type === "call"
+            ? `Called ${player.lastDecision.amount} points`
+            : player.lastDecision.type === "raise"
+            ? `Raised ${player.lastDecision.amount} points`
+            : "Folded"
+          }
+        </div>
+)}
+    </li>
+  ))}
+</ul>
       </div>
+
 
   
         <div className="center">
           <div className="title">{videoData.title}</div>
           <div className="video-container">
-            <div className="thumbnail" style={{ backgroundImage: `url(${videoData.thumbnail})` }}></div>
+            <div className="thumbnail" style={{ backgroundImage: `url(${videoData.thumbnailUrl})` }}></div>
           </div>
           <div className="stats">
-            <p>Date: {videoData.releaseDate}</p>
+            <p>Release Date: {videoData.releaseDate}</p>
             <p>Likes: {videoData.likes}</p>
             <p>Views: {videoData.views}</p>
           </div>
@@ -285,13 +324,26 @@ const Game = () => {
       <div className="right">
         <div className="round-number">Round {gamePhase}</div>
         <div className="pot-amount">pot: {pot}</div>
-        <div className="input-amount">
-          <input className="input-amount" type="number" placeholder="Enter amount..." />
-        </div>
+        <input
+          className="input-amount"
+          type="number"
+          placeholder="Enter amount..."
+          value={decisionAmount}
+          onChange={(event) => setDecisionAmount(event.target.value)}
+        />
         <div className="button-container">
-          <button className="call-button" onClick={handleDecisionSubmit}>call</button>
-          <button className="raise-button" onClick={handleDecisionSubmit}>raise</button>
+          <button className="call-button" onClick={handleCall}>call</button>
+          <button className="raise-button" onClick={handleRaise}>raise</button>
           <button className="left-button" onClick={handleLeaveGame}>leave</button>
+            <dialog open={ShowLeaveModal}>
+              <div className="modal">
+                <p>Are you sure you want to leave the game?</p>
+                <div className="button-container">
+                  <button className="confirm-button" onClick={handleConfirmLeave}>Yes</button>
+                  <button className="cancel-button" onClick={handleCancelLeave}>No</button>
+                </div>
+              </div>
+            </dialog>
           <button className="help-button" onClick={handleHelpClick}>help</button>
         </div>
       </div>
@@ -314,19 +366,12 @@ const Game = () => {
             
         {/* end of game section */}
         {gameEnd && <EndOfGame winner={winner} gamePhase={gamePhase} />}
-
-        {/* Show confirmation window when "leave" button is clicked */}
-        { ShowLeaveModal && (
-        <div>
-          <p>Are you sure you want to leave the game?</p>
-          <button onClick={handleLeaveGame}>Yes</button>
-          <button onClick={() => setShowLeaveModal(false)}>No</button>
-        </div>
-        )}
         
-        {/* Show how to play window when "help" button is clicked */}
-        {showHowToPlay && <HowToPlay handleClose={() => setShowHowToPlay(false)} />}
-
+    {/* Show how to play window when "help" button is clicked */}
+    {showHowToPlay && <HowToPlay handleClose={() => setShowHowToPlay(false)} />}
+    
+    {/* Show show down window when "show down" button is clicked */}
+    {showShowDown && <ShowDown handleClose={handleCloseShowDown} />}
     </div>
     </div>
 );
