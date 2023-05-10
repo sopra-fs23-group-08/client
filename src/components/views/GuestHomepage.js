@@ -135,9 +135,7 @@ const GuestHomepage = () => {
                           className={classes.cardContainer}
                     >
                         <Grid item>
-                            <Tooltip aria-
-                                title={'Join Game'}
-                                >
+                            <Tooltip title={'Join Game'}>
                                 <IconButton onClick={toggleDialog} className={classes.button} style={{ color: 'black' }} aria-hidden = {false}>
                                     <InputIcon className={classes.menuIcon} aria-hidden = {false}/>
                                 </IconButton>
