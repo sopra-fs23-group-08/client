@@ -268,12 +268,6 @@ const Lobby = () => {
     /** Realtime Components */
     let playerList = <PlayerList list={players}/>;
 
-    // rerender PlayerList if players change
-    // this might be unneccessary, --> the component is rerendered when player is changed anyway
-    useEffect(() => {
-        playerList = <PlayerList list={players}/>;
-    }, [players])
-
     let settings = <GameSettings isHost={isHost.current}
                                  // variables
                                  language={language}
@@ -289,26 +283,6 @@ const Lobby = () => {
                                  onPlaylistUrlChange={setPlaylistUrl}
                                  onSaveSettings={handleSettingsSave}
     />;
-
-    // rerender GameSettings if settings change
-    useEffect(() => {
-        settings = <GameSettings isHost={isHost.current}
-
-                                // variables
-                                 language={language}
-                                 balance={initialBalance}
-                                 bigBlind={bigBlind}
-                                 smallBlind={smallBlind}
-                                 playlistUrl={playlistUrl}
-                                // setters
-                                 onLanguageChange={setLanguage}
-                                 onBalanceChange={setInitialBalance}
-                                 onBigBlindChange={setBigBlind}
-                                 onSmallBlindChange={setSmallBlind}
-                                 onPlaylistUrlChange={setPlaylistUrl}
-                                 onSaveSettings={handleSettingsSave}
-        />
-    }, [isHost.current, language, initialBalance, bigBlind, smallBlind, playlistUrl])
 
     let content = <Spinner/>
 
