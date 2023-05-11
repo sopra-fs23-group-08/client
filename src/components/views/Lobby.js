@@ -185,17 +185,15 @@ const Lobby = () => {
         }
         // check if playlistUrl is a valid YouTube playlist
         try {
-            const requestBody = JSON.stringify({playlistUrl});
-            await api.put(`/games/${gameId}/settings/playlist`, requestBody);
+            await api.post(`/games/helpers/playlist`, { playlistUrl });
         }
         catch (error) {
             const response = error.response;
-
             if(response.status === 400) {
                 alert(`${response.data.message}`);
             }
             else {
-                alert(`Something unexpected went wrong while saving your settings. Please try again.`);
+                alert(`Something unexpected went wrong while saving your settings: ${response.status}`);
             }
             return;
         }
