@@ -137,9 +137,9 @@ const Lobby = () => {
         if(isMounted.current) {
             setLanguage(settingsData.language)
             setPlaylistUrl(settingsData.playlistUrl)
-            setInitialBalance(settingsData.balance)
-            setBigBlind(`${settingsData.bigBlind}`)
-            setSmallBlind(`${settingsData.smallBlind}`)
+            setInitialBalance(settingsData.initialBalance.toString())
+            setBigBlind(settingsData.bigBlind.toString())
+            setSmallBlind(settingsData.smallBlind.toString())
         }
     }
 
