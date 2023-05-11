@@ -231,7 +231,7 @@ const Lobby = () => {
             setPlayersSubscription(
                 client.subscribe(`/topic/games/${gameId}/players`, handlePlayerUpdate)
             )
-            if(!isHost) {
+            if(!isHost.current) {
                 setSettingsSubscription(
                     client.subscribe(`/topic/games/${gameId}/settings`, handleSettingsUpdate)
                 )
