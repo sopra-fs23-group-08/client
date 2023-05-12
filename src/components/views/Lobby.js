@@ -156,7 +156,7 @@ const Lobby = () => {
         console.log("gameId:", gameId);
         gameStarting.current = true;
 
-        stompClient.send(`/app/games/${gameId}/start`, {}, "start blease");
+        stompClient.current.send(`/app/games/${gameId}/start`, {}, "start blease");
         isMounted.current = false;
         history.push(`/games/${gameId}`);
     };
@@ -164,12 +164,13 @@ const Lobby = () => {
 
     const handleLeaveGame = () => {
         // remove player from playerList & disconnect WS
-        const destination = `/app/games/${gameId}/players/leave`
-        const token = localStorage.getItem("token");
-        const name = localStorage.getItem("name");
+        const destination = `/app/games/${gameId}/players/remove`
+        const token = user.token;
+        console.log(user.name);
+        const name = user.name;
         const requestBody = JSON.stringify({ name, token });
         // TODO catch exceptions somehow
-        stompClient.send(destination, {}, requestBody);
+        stompClient.current.send(destination, {}, requestBody);
         history.push("/home");
     }
 
@@ -184,18 +185,20 @@ const Lobby = () => {
             return;
         }
         // check if playlistUrl is a valid YouTube playlist
-        try {
-            await api.post(`/games/helpers/playlist`, { playlistUrl });
-        }
-        catch (error) {
-            const response = error.response;
-            if(response.status === 400) {
-                alert(`${response.data.message}`);
+        if(playlistUrl) {
+            try {
+                await api.post(`/games/helpers/playlist`, { playlistUrl });
             }
-            else {
-                alert(`Something unexpected went wrong while saving your settings: ${response.status}`);
+            catch (error) {
+                const response = error.response;
+                if(response.status === 400) {
+                    alert(`${response.data.message}`);
+                }
+                else {
+                    alert(`Something unexpected went wrong while saving your settings: ${response.status}`);
+                }
+                return;
             }
-            return;
         }
 
         const requestBody = JSON.stringify({
@@ -206,7 +209,7 @@ const Lobby = () => {
             smallBlind
         });
 
-        stompClient.send(destination, {}, requestBody);
+        stompClient.current.send(destination, {}, requestBody);
     }
 
     /** ON MOUNT/DISMOUNT */
@@ -284,7 +287,7 @@ const Lobby = () => {
 
     let content = <Spinner/>
 
-    if(host && stompClient) {
+    if(host && stompClient.current) {
         content = <Grid item>
             <Card className={classes.mainCard}>
                 <AppBar position={"relative"}>
@@ -306,7 +309,7 @@ const Lobby = () => {
                             Copy lobby id
                         </Button>
                         <IconButton color={"inherit"}
-                                    onClick={handleLeaveGame}
+                                    onClick={() => history.push("/home")}
                         >
                             <ExitToAppIcon/>
                         </IconButton>
