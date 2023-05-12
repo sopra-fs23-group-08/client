@@ -36,11 +36,11 @@ const Game = () => {
 
   const { stompClient } = useContext(StompContext);
   const { connect } = useContext(StompContext);
-  const {setStompClient} = useContext(StompContext);
 
   const [playerList, setPlayerList] = useState([]);
 
   const [currentPlayerUsername, setCurrentPlayerUsername] = useState('');
+  const [currentPlayer, setCurrentPlayer] = useState('')
 
   const history = useHistory();
   // define state variables for video data
@@ -64,9 +64,19 @@ const Game = () => {
     setPlayerList(data);
   };
   
+  const convertDuration = (duration) => {
+    const match = duration.match(/PT(\d+)M(\d+)S/);
+    if (match) {
+      const minutes = parseInt(match[1]);
+      const seconds = parseInt(match[2]);
+      return minutes + " min " + seconds + " sec";
+    }
+    return "";
+  }
   
   const handleVideoDataUpdate = (message) => {
     const data = JSON.parse(message.body);
+    data.duration = convertDuration(data.duration);
     setVideoData(data);
   };
 
@@ -85,9 +95,11 @@ const Game = () => {
     const currentPlayer = data.find((player) => player.currentPlayer === true);
     console.log('currentPlayer:', currentPlayer);
     if (currentPlayer) {
+      setCurrentPlayer(currentPlayer);
       setCurrentPlayerUsername(currentPlayer.username);
     }
   };
+
 
     useEffect(() => {
 
@@ -181,9 +193,8 @@ const Game = () => {
 
     const handleDecisionSubmit = (decisionType, raiseAmount) => {
       const gameId = location.pathname.split('/')[2];
-      const token = localStorage.getItem('token');
       const currentPlayer = playerList.find((player) => player.currentPlayer === true);
-      if (currentPlayer.token === token) {
+      if (currentPlayer.token === localStorage.getItem('token')) {
         const decisionData = {
         decision: decisionType,
         raiseAmount: raiseAmount,
