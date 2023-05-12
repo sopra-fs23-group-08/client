@@ -192,7 +192,7 @@ const Lobby = () => {
             catch (error) {
                 const response = error.response;
                 if(response.status === 400) {
-                    alert(`${response.data.message}`);
+                    alert(`The Playlist you entered is invalid: ${response.data.message}`);
                 }
                 else {
                     alert(`Something unexpected went wrong while saving your settings: ${response.status}`);
