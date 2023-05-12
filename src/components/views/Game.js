@@ -35,8 +35,8 @@ const Game = () => {
   const [token, setToken] = useState(localStorage.getItem('token'));
 
   const { stompClient } = useContext(StompContext);
-  const { setStompClient } = useContext(StompContext);
   const { connect } = useContext(StompContext);
+  const {setStompClient} = useContext(StompContext);
 
   const [playerList, setPlayerList] = useState([]);
 
@@ -88,38 +88,28 @@ const Game = () => {
       setCurrentPlayerUsername(currentPlayer.username);
     }
   };
-  
-  useEffect(() => {
-    const createStompClient = async () => {
-      const stompClient = await connect();
-      return stompClient;
-    };
-  
-    if (!stompClient) {
-      createStompClient().then((client) => {
-        setStompClient(client);
-      });
-    }
-  }, [stompClient, connect, setStompClient]);
-
 
     useEffect(() => {
+
+      // setup stomp client
+      const connectSocket = async () => {
+      const client = await connect();
+
+      // SUBSCRIPTIONS //
       const gameId = location.pathname.split("/")[2];
       const token = localStorage.getItem("token");
-    // Subscribe to the game
-    let gameSubscription;
-    if (stompClient) {
-      gameSubscription = stompClient.subscribe(
+      // Subscribe to the game
+      const gameSubscription = client.subscribe(
         `/topic/games/${gameId}/state`,
         handleGameUpdate
       );
 
     // Subscribe to the video
-      const videoSubscription = stompClient.subscribe(
+      const videoSubscription = client.subscribe(
         `/topic/games/${gameId}/video`,
         handleVideoDataUpdate
       );
-      const playerListSubscription = stompClient.subscribe(
+      const playerListSubscription = client.subscribe(
         `/topic/games/${gameId}/players`,
         message => {
           handlePlayerListUpdate(message);
@@ -129,12 +119,12 @@ const Game = () => {
       console.log('playerListSubscription:', playerListSubscription);
       
       //subscribe to the comments
-        const commentsSubscription = stompClient.subscribe(
+        const commentsSubscription = client.subscribe(
           `/topic/games/${gameId}/players/${token}/hand`,
             handleCommentsUpdate
         );
         //subscribe to the decision
-        const decisionSubscription = stompClient.subscribe(
+        const decisionSubscription = client.subscribe(
           `/topic/games/${gameId}/players/${token}/decision`,
           (message) => {
               console.log('decisionSubscription:', decisionSubscription);
@@ -144,7 +134,7 @@ const Game = () => {
       );
             
         //subscribe to the winner 
-        const winnerSubscription = stompClient.subscribe(
+        const winnerSubscription = client.subscribe(
           `/topic/games/${gameId}/state/winner`,
           (message) => {
             const data = JSON.parse(message.body);
@@ -152,7 +142,7 @@ const Game = () => {
           }
         );
         //subscribe to the game end
-        const gameEndSubscription = stompClient.subscribe(
+        const gameEndSubscription = client.subscribe(
           `/topic/games/${gameId}/state/end`,
           (message) => {
             const data = JSON.parse(message.body);
@@ -182,8 +172,10 @@ const Game = () => {
             gameEndSubscription.unsubscribe();
           };
         };
-      }
-    }, [stompClient, location.pathname]);
+      };
+      connectSocket();
+    }, [connect, location.pathname]);
+
 
 
 
@@ -196,14 +188,15 @@ const Game = () => {
         decision: decisionType,
         raiseAmount: raiseAmount,
       }
-      stompClient.send(`/app/games/${gameId}/players/${token}/decision`, {}, JSON.stringify(decisionData));
+      stompClient.current.send(`/app/games/${gameId}/players/${token}/decision`, {}, JSON.stringify(decisionData));
       }else{
         message.error('It is not your turn!');
       }
     };
     
     const handleCall = () => {
-      handleDecisionSubmit('CALL', null);
+      const raiseAmount = parseInt(decisionAmount) || 0;
+      handleDecisionSubmit('CALL', raiseAmount);
     };
     
     const handleRaise = () => {
@@ -221,7 +214,7 @@ const Game = () => {
       const gameId = location.pathname.split('/')[2];
       const username = localStorage.getItem('username');
       const token = localStorage.getItem('token');
-      stompClient.send(`/app/games/${gameId}/players/remove`, {}, JSON.stringify({ username: username, token: token }));
+      stompClient.current.send(`/app/games/${gameId}/players/remove`, {}, JSON.stringify({ username: username, token: token }));
       // Update player list in front-end
       handlePlayerListUpdate((prevPlayerList) => prevPlayerList.filter((player) => player.username !== username));
       setShowLeaveModal(false);
@@ -294,6 +287,7 @@ const Game = () => {
             <p>Release Date: {videoData.releaseDate}</p>
             <p>Likes: {videoData.likes}</p>
             <p>Views: {videoData.views}</p>
+            <p>Duration: {videoData.duration}</p>
           </div>
         </div>
 
