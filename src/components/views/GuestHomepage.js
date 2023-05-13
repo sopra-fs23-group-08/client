@@ -88,10 +88,24 @@ const GuestHomepage = () => {
         }
     }
 
-    const joinLobby = () => {
+    const joinLobby = async () => {
         console.log("Joining lobby...");
-        // TODO check if lobby exists/is full
-        history.push(`/games/${LobbyID}/lobby`, {user: user})
+        try {
+            await api.get(`/games/${LobbyID}/lobby`)
+            history.push(`/games/${LobbyID}/lobby`, {user: user})
+        }
+        catch (error) {
+            const response = error.response;
+            if (response.status === 404) {
+                alert("The lobby you are trying to join does not exist.")
+            }
+            if (response.status === 409) {
+                alert("The lobby you are trying to join is full.")
+            }
+            if (response.status === 403) {
+                alert("The game you are trying to join has already started.")
+            }
+        }
     }
 
     const handleLobbyIDChange = (e) => {setLobbyID(e.target.value)}
