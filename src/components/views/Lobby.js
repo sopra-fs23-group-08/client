@@ -161,12 +161,11 @@ const Lobby = () => {
         history.push(`/games/${gameId}`);
     };
 
-
     const handleLeaveGame = () => {
         // remove player from playerList & disconnect WS
+        // should only be triggered by beforeUnload event OR cleanup, not both.
         const destination = `/app/games/${gameId}/players/remove`
         const token = user.token;
-        console.log(user.name);
         const name = user.name;
         const requestBody = JSON.stringify({ name, token });
         // TODO catch exceptions somehow
@@ -214,6 +213,9 @@ const Lobby = () => {
 
     /** ON MOUNT/DISMOUNT */
     useEffect(() => {
+
+        window.addEventListener("beforeunload", handleLeaveGame);
+
         // check if user is host -> able to modify settings
         const checkHost = async () => {
             // check if data is received/parsed correctly
@@ -255,12 +257,13 @@ const Lobby = () => {
         connectSocket();
 
         // CLEANUP //
-        return async () => {
-            // unsubscribe from all subscriptions
-            if(settingsSubscription) await settingsSubscription.unsubscribe();
-            if(playersSubscription) await playersSubscription.unsubscribe();
-            if(gameStartSubscription) await gameStartSubscription.unsubscribe();
+        return () => {
+            // unsubscribe from all subscriptions TODO check if I need to await the unsubscribe calls
+            if(settingsSubscription) settingsSubscription.unsubscribe();
+            if(playersSubscription) playersSubscription.unsubscribe();
+            if(gameStartSubscription) gameStartSubscription.unsubscribe();
             if(!gameStarting.current) handleLeaveGame();
+            window.removeEventListener("beforeunload", handleLeaveGame);
         }
     }, []);
 
