@@ -3,7 +3,7 @@
  */
 class User {
   constructor(data = {}) {
-    this.name = null;
+    this.username = data.username || null;
     this.token = null;
     Object.assign(this, data);
   }

@@ -84,9 +84,9 @@ const Homepage = () => {
     const createGame = async () => {
         console.log("Creating game...");
         try {
-            const name = user.name;
+            const username = user.username;
             const token = user.token;
-            const response = await api.post("/games", JSON.stringify({name, token}));
+            const response = await api.post("/games", JSON.stringify({username, token}));
             // Here we use location.state to pass the user object to the lobby
             // up until here we used localStorage to store the user object
             // might want to change this to be consistent
@@ -146,7 +146,7 @@ const Homepage = () => {
                                 {user.name.charAt(0)}
                             </Avatar>
                             <Typography className={classes.headerTitle}>
-                                Playing as {user.name}
+                                Playing as {user.username}
                             </Typography>
                             <button color = {'inherit'}  onClick={toggleHowToPlay}>How to Play</button>
                                 {/* Show how to play window when "help" button is clicked */}

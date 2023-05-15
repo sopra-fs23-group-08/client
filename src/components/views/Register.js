@@ -4,14 +4,16 @@ import {Input} from "../ui/Input";
 import {BaseBox} from "../ui/BaseBox";
 import 'styles/views/Register.scss';
 import logo from 'styles/assets/logo.png'
-import {useState} from "react";
+import {useContext, useState} from "react";
 import {useHistory} from "react-router-dom";
 import {api, handleError} from 'helpers/api';
 import User from "../../models/User";
+import UserContext from "components/contexts/UserContext";
 
 const Register = () => {
 
     const history = useHistory();
+    const {setUser} = useContext(UserContext)
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [passwordMatch, setPasswordMatch] = useState(false);
@@ -24,9 +26,12 @@ const Register = () => {
 
             // Get the returned user and update a new object.
             const user = new User(response.data);
+            setUser(user);
+
 
             // Store the token into the local storage.
             localStorage.setItem('token', user.token);
+
 
             // Login successfully worked --> navigate to the route /game in the GameRouter
             history.push(`/home`);
