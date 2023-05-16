@@ -3,12 +3,14 @@ import User from "./User";
 /**
  * Player model (user in game)
  */
-class Player extends User{
+class Player extends User {
     constructor(data = {}) {
         super();
         this.score = 0;
-        this.lastAction = null;
-        this.currentRole = null;
+        this.lastDecision = null;
+        this.isBigBlind = false;
+        this.isSmallBlind = false;
+        this.isCurrentPlayer = false;
         Object.assign(this, data);
     }
 }
