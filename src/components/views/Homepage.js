@@ -148,7 +148,7 @@ const Homepage = () => {
                             className={classes.cardBar}
                         >
                             <Avatar className={classes.headerAvatar}>
-                                {user.name.charAt(0)}
+                                {user.username.charAt(0)}
                             </Avatar>
                             <Typography className={classes.headerTitle}>
                                 Playing as {user.username}
