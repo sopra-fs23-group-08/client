@@ -119,9 +119,9 @@ const Lobby = () => {
     /** Websocket */
     const { stompClient } = useContext(StompContext);
     const { connect } = useContext(StompContext);
-    const [playersSubscription, setPlayersSubscription] = useState(null);
-    const [settingsSubscription, setSettingsSubscription] = useState(null);
-    const [gameStartSubscription, setGameStartSubscription] = useState(null);
+    const playersSubscription = useRef(null);
+    const settingsSubscription = useRef(null);
+    const gameStartSubscription = useRef(null);
 
     /** Handler functions */
 
@@ -233,17 +233,13 @@ const Lobby = () => {
             const client = await connect();
 
             // SUBSCRIPTIONS //
-            setPlayersSubscription(
-                client.subscribe(`/topic/games/${gameId}/players`, handlePlayerUpdate)
-            )
+            playersSubscription.current = client.subscribe(`/topic/games/${gameId}/players`, handlePlayerUpdate)
+
             if(!isHost.current) {
-                setSettingsSubscription(
-                    client.subscribe(`/topic/games/${gameId}/settings`, handleSettingsUpdate)
-                )
-                setGameStartSubscription(
-                    client.subscribe(`/topic/games/${gameId}/start`, handleRemoteStartGame)
-                )
+                settingsSubscription.current = client.subscribe(`/topic/games/${gameId}/settings`, handleSettingsUpdate)
+                gameStartSubscription.current = client.subscribe(`/topic/games/${gameId}/start`, handleRemoteStartGame)
             }
+
             // TODO: catch errors somehow - WS errors are not propagated to the client yet
             const name = user.name;
             const token = localStorage.getItem("token");
@@ -259,11 +255,11 @@ const Lobby = () => {
         // CLEANUP //
         return () => {
             // unsubscribe from all subscriptions TODO check if I need to await the unsubscribe calls
-            if(settingsSubscription) settingsSubscription.unsubscribe();
-            if(playersSubscription) playersSubscription.unsubscribe();
-            if(gameStartSubscription) gameStartSubscription.unsubscribe();
-            if(!gameStarting.current) handleLeaveGame();
+            if(settingsSubscription.current) settingsSubscription.current.unsubscribe();
+            if(playersSubscription.current) playersSubscription.current.unsubscribe();
+            if(gameStartSubscription.current) gameStartSubscription.current.unsubscribe();
             window.removeEventListener("beforeunload", handleLeaveGame);
+            if(!gameStarting.current) handleLeaveGame();
         }
     }, []);
 
