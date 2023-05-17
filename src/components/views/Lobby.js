@@ -152,10 +152,11 @@ const Lobby = () => {
 
 
     const handleStartGame = () => {
-        console.log("handleStartGame called");
-        console.log("gameId:", gameId);
+        if(players.length < 2) {
+            alert("You cannot play alone! :(")
+            return;
+        }
         gameStarting.current = true;
-
         stompClient.current.send(`/app/games/${gameId}/start`, {}, "start blease");
         isMounted.current = false;
         history.push(`/games/${gameId}`);
@@ -295,7 +296,7 @@ const Lobby = () => {
                             {host.name}'s lobby
                         </Typography>
                         <Button variant={"contained"}
-                                disabled={!isHost.current}
+                                disabled={!isHost.current || players.length < 2}
                                 onClick={handleStartGame}
                         >
                             Start Game
