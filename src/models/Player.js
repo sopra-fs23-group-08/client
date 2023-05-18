@@ -8,9 +8,9 @@ class Player extends User {
         super();
         this.score = 0;
         this.lastDecision = null;
-        this.isBigBlind = false;
-        this.isSmallBlind = false;
-        this.isCurrentPlayer = false;
+        this.bigBlind = false;
+        this.smallBlind = false;
+        this.currentPlayer = false;
         Object.assign(this, data);
     }
 }
