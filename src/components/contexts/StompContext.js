@@ -15,7 +15,7 @@ export function StompProvider (props) {
   const connect = async () => {
     let client = stompClient.current;
     if(!client) {
-      const socket = new SockJS("http://localhost:8080/sopra-websocket");
+      const socket = new SockJS("http://localhost:8080/sopra-websocket"); //todo change adress if deployed
       client = Stomp.over(socket);
       await new Promise((resolve) => client.connect({}, resolve));
       stompClient.current = client;
