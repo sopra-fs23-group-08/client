@@ -66,6 +66,7 @@ LabeledSetting.propTypes = {
 
 // handler methods are passed in as props
 // isHost boolean is passed in as prop -> if false, disable all inputs
+// Material ui generates a warning because it uses the selected option on <option> instead of defaultValue on the select tag
 const GameSettings = (props) => {
     const classes = useStyles();
 

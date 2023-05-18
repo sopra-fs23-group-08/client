@@ -3,13 +3,13 @@ import {useContext, useEffect, useRef, useState} from "react";
 import {useHistory, useParams} from "react-router-dom";
 import {api} from "../../helpers/api";
 import PropTypes from "prop-types";
-import {makeStyles} from "@material-ui/core/styles";
+import { makeStyles } from "@material-ui/core/styles";
 import IconButton from "@material-ui/core/IconButton";
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import GameSettings from "../ui/GameSettings";
 import Player from "../../models/Player";
 import SettingsData from "../../models/SettingsData";
-import {Spinner} from "../ui/Spinner";
+import { Spinner } from "../ui/Spinner";
 import UserContext from "../contexts/UserContext";
 import StompContext from "../contexts/StompContext";
 
@@ -119,9 +119,9 @@ const Lobby = () => {
     /** Websocket */
     const { stompClient } = useContext(StompContext);
     const { connect } = useContext(StompContext);
-    const [playersSubscription, setPlayersSubscription] = useState(null);
-    const [settingsSubscription, setSettingsSubscription] = useState(null);
-    const [gameStartSubscription, setGameStartSubscription] = useState(null);
+    const playersSubscription = useRef(null);
+    const settingsSubscription = useRef(null);
+    const gameStartSubscription = useRef(null);
 
     /** Handler functions */
 
@@ -137,9 +137,9 @@ const Lobby = () => {
         if(isMounted.current) {
             setLanguage(settingsData.language)
             setPlaylistUrl(settingsData.playlistUrl)
-            setInitialBalance(settingsData.balance)
-            setBigBlind(`${settingsData.bigBlind}`)
-            setSmallBlind(`${settingsData.smallBlind}`)
+            setInitialBalance(settingsData.initialBalance.toString())
+            setBigBlind(settingsData.bigBlind.toString())
+            setSmallBlind(settingsData.smallBlind.toString())
         }
     }
 
@@ -152,29 +152,55 @@ const Lobby = () => {
 
 
     const handleStartGame = () => {
-        console.log("handleStartGame called");
-        console.log("gameId:", gameId);
+        if(players.length < 2) {
+            alert("You cannot play alone! :(")
+            return;
+        }
         gameStarting.current = true;
-
-        stompClient.send(`/app/games/${gameId}/start`, {}, "start blease");
+        stompClient.current.send(`/app/games/${gameId}/start`, {}, "start blease");
         isMounted.current = false;
         history.push(`/games/${gameId}`);
     };
 
-
     const handleLeaveGame = () => {
         // remove player from playerList & disconnect WS
-        const destination = `/app/games/${gameId}/players/leave`
-        const token = localStorage.getItem("token");
-        const name = localStorage.getItem("name");
+        // should only be triggered by beforeUnload event OR cleanup, not both.
+        const destination = `/app/games/${gameId}/players/remove`
+        const token = user.token;
+        const name = user.name;
         const requestBody = JSON.stringify({ name, token });
         // TODO catch exceptions somehow
-        stompClient.send(destination, {}, requestBody);
+        stompClient.current.send(destination, {}, requestBody);
         history.push("/home");
     }
 
-    const handleSettingsSave = () => {
+    function isPositiveInteger(n) {
+        return n >>> 0 && parseInt(n);
+    }
+
+    const handleSettingsSave = async () => {
         const destination = `/app/games/${gameId}/settings`;
+        if(!(isPositiveInteger(initialBalance) && isPositiveInteger(bigBlind) && isPositiveInteger(smallBlind))) {
+            alert("The blinds and initial balance must be positive, whole numbers.");
+            return;
+        }
+        // check if playlistUrl is a valid YouTube playlist
+        if(playlistUrl) {
+            try {
+                await api.post(`/games/helpers/playlist`, { playlistUrl });
+            }
+            catch (error) {
+                const response = error.response;
+                if(response.status === 400) {
+                    alert(`The Playlist you entered is invalid: ${response.data.message}`);
+                }
+                else {
+                    alert(`Something unexpected went wrong while saving your settings: ${response.status}`);
+                }
+                return;
+            }
+        }
+
         const requestBody = JSON.stringify({
             language,
             playlistUrl,
@@ -182,11 +208,15 @@ const Lobby = () => {
             bigBlind,
             smallBlind
         });
-        stompClient.send(destination, {}, requestBody);
+
+        stompClient.current.send(destination, {}, requestBody);
     }
 
     /** ON MOUNT/DISMOUNT */
-    useEffect(async () => {
+    useEffect(() => {
+
+        window.addEventListener("beforeunload", handleLeaveGame);
+
         // check if user is host -> able to modify settings
         const checkHost = async () => {
             // check if data is received/parsed correctly
@@ -197,25 +227,21 @@ const Lobby = () => {
                 isHost.current = true;
             }
         }
-        await checkHost();
+        checkHost();
 
         // setup stomp client
         const connectSocket = async () => {
             const client = await connect();
 
             // SUBSCRIPTIONS //
-            setPlayersSubscription(
-                client.subscribe(`/topic/games/${gameId}/players`, handlePlayerUpdate)
-            )
-            if(!isHost) {
-                setSettingsSubscription(
-                    client.subscribe(`/topic/games/${gameId}/settings`, handleSettingsUpdate)
-                )
-                setGameStartSubscription(
-                    client.subscribe(`/topic/games/${gameId}/start`, handleRemoteStartGame)
-                )
+            playersSubscription.current = client.subscribe(`/topic/games/${gameId}/players`, handlePlayerUpdate)
+
+            if(!isHost.current) {
+                settingsSubscription.current = client.subscribe(`/topic/games/${gameId}/settings`, handleSettingsUpdate)
+                gameStartSubscription.current = client.subscribe(`/topic/games/${gameId}/start`, handleRemoteStartGame)
             }
-            // ADD USER TO GAME TODO: catch errors somehow - errors are not propagated to the client yet
+
+            // TODO: catch errors somehow - WS errors are not propagated to the client yet
             const name = user.name;
             const token = localStorage.getItem("token");
             const requestBody = JSON.stringify({name, token});
@@ -225,14 +251,15 @@ const Lobby = () => {
                 requestBody
             );
         }
-        await connectSocket();
+        connectSocket();
 
         // CLEANUP //
-        return async () => {
-            // unsubscribe from all subscriptions
-            if(settingsSubscription) await settingsSubscription.unsubscribe();
-            if(playersSubscription) await playersSubscription.unsubscribe();
-            if(gameStartSubscription) await gameStartSubscription.unsubscribe();
+        return () => {
+            // unsubscribe from all subscriptions TODO check if I need to await the unsubscribe calls
+            if(settingsSubscription.current) settingsSubscription.current.unsubscribe();
+            if(playersSubscription.current) playersSubscription.current.unsubscribe();
+            if(gameStartSubscription.current) gameStartSubscription.current.unsubscribe();
+            window.removeEventListener("beforeunload", handleLeaveGame);
             if(!gameStarting.current) handleLeaveGame();
         }
     }, []);
@@ -241,10 +268,6 @@ const Lobby = () => {
 
     /** Realtime Components */
     let playerList = <PlayerList list={players}/>;
-    // rerender PlayerList if players change
-    useEffect(() => {
-        playerList = <PlayerList list={players}/>;
-    }, [players])
 
     let settings = <GameSettings isHost={isHost.current}
                                  // variables
@@ -262,29 +285,9 @@ const Lobby = () => {
                                  onSaveSettings={handleSettingsSave}
     />;
 
-    // rerender GameSettings if settings change
-    useEffect(() => {
-        settings = <GameSettings isHost={isHost.current}
-
-                                // variables
-                                 language={language}
-                                 balance={initialBalance}
-                                 bigBlind={bigBlind}
-                                 smallBlind={smallBlind}
-                                 playlistUrl={playlistUrl}
-                                // setters
-                                 onLanguageChange={setLanguage}
-                                 onBalanceChange={setInitialBalance}
-                                 onBigBlindChange={setBigBlind}
-                                 onSmallBlindChange={setSmallBlind}
-                                 onPlaylistUrlChange={setPlaylistUrl}
-                                 onSaveSettings={handleSettingsSave}
-        />
-    }, [isHost.current, language, initialBalance, bigBlind, smallBlind, playlistUrl])
-
     let content = <Spinner/>
 
-    if(host && stompClient) {
+    if(host && stompClient.current) {
         content = <Grid item>
             <Card className={classes.mainCard}>
                 <AppBar position={"relative"}>
@@ -293,7 +296,7 @@ const Lobby = () => {
                             {host.name}'s lobby
                         </Typography>
                         <Button variant={"contained"}
-                                disabled={!isHost.current}
+                                disabled={!isHost.current || players.length < 2}
                                 onClick={handleStartGame}
                         >
                             Start Game
@@ -306,7 +309,7 @@ const Lobby = () => {
                             Copy lobby id
                         </Button>
                         <IconButton color={"inherit"}
-                                    onClick={handleLeaveGame}
+                                    onClick={() => history.push("/home")}
                         >
                             <ExitToAppIcon/>
                         </IconButton>

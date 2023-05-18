@@ -5,7 +5,7 @@ class Settings {
     constructor(data = {}) {
         this.language = null;
         this.playlistUrl = null;
-        this.balance = null;
+        this.initialBalance = null;
         this.bigBlind = null;
         this.smallBlind = null;
         Object.assign(this, data);
