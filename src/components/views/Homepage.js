@@ -120,6 +120,7 @@ const Homepage = () => {
 
     const openProfile = () => {
         // TODO implement
+        //
     }
 
     const handleLobbyIDChange = (e) => {setLobbyID(e.target.value)}
