@@ -1,13 +1,10 @@
-import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useState, useEffect, useContext } from 'react';
+import { useLocation, useHistory } from 'react-router-dom';
 import StompContext from 'components/contexts/StompContext';
 import "styles/views/Game.scss";
 import HowToPlay from 'components/ui/HowToPlay';
 import ShowDown from 'components/ui/ShowDown';
 import EndOfGame from 'components/ui/EndOfGame';
-import axios from 'axios';
-import { useContext } from 'react';
-import { useHistory } from 'react-router-dom';
 import { message } from 'antd';
 
 
@@ -20,19 +17,18 @@ const Game = () => {
   const [gameEnd, setGameEnd] = useState(false);
   const [pot, setPot] = useState(0);
   const [decisionAmount, setDecisionAmount] = useState(0);
-  const [callAmount, setCallAmount] = useState(0);
-  const [myHand, setMyHand] = useState([]);
-  const [playersDecision, setPlayersDecision] = useState([]);
+  const [, setCallAmount] = useState(0);
+  const [, setPlayersDecision] = useState([]);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [showShowDown, setShowShowDown] = useState(false);
   const [comments, setComments] = useState([]);
   const [ShowLeaveModal, setShowLeaveModal] = useState(false);
 
-  const [bigBlind, setBigBlind] = useState(0);
-  const [smallBlind, setSmallBlind] = useState(0);
-  const [handleShowDown, setHandleShowDown] = useState(false);
-  const [handleEndOfGame, setHandleEndOfGame] = useState(false);
-  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [, setBigBlind] = useState(0);
+  const [, setSmallBlind] = useState(0);
+  const [token, ] = useState(localStorage.getItem('token'));
+
+
 
   const { stompClient } = useContext(StompContext);
   const { connect } = useContext(StompContext);
@@ -40,7 +36,7 @@ const Game = () => {
   const [playerList, setPlayerList] = useState([]);
 
   const [currentPlayerUsername, setCurrentPlayerUsername] = useState('');
-  const [currentPlayer, setCurrentPlayer] = useState('')
+  const [, setCurrentPlayer] = useState('')
 
   const history = useHistory();
   // define state variables for video data
@@ -243,15 +239,7 @@ const Game = () => {
     };
 
     // handle winner
-    const handleGameEnd = (gameEndMessage) => {
-      setWinner(gameEndMessage.winner);
-      setGamePhase(gameEndMessage.gamePhase);
-      setGameEnd(true);
-    };
     // show down
-    const handleShowShowDown = () => {
-      setShowShowDown(true);
-    };
     // close show down
     const handleCloseShowDown = () => {
       setShowShowDown(false);
