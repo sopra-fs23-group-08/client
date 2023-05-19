@@ -1,6 +1,7 @@
 import React, {createContext, useEffect, useRef} from "react";
 import SockJS from "sockjs-client";
 import Stomp from "stompjs";
+import {getDomain} from "../../helpers/getDomain";
 
 const StompContext = createContext({});
 
@@ -15,7 +16,8 @@ export function StompProvider (props) {
   const connect = async () => {
     let client = stompClient.current;
     if(!client) {
-      const socket = new SockJS("http://localhost:8080/sopra-websocket"); //todo change adress if deployed
+      const domain = getDomain();
+      const socket = new SockJS(`${domain}/sopra-websocket`);
       client = Stomp.over(socket);
       await new Promise((resolve) => client.connect({}, resolve));
       stompClient.current = client;
@@ -56,7 +58,3 @@ export function StompProvider (props) {
 
 
 export default StompContext;
-
-
-
-
