@@ -29,7 +29,7 @@ const TestGame = () => {
 
   /** View info */
   const isMounted = useRef(true); // flag to avoid state updates after unmount
-  const gameStarting = useRef(true);
+  //const gameStarting = useRef(true);
   const history = useHistory();
   const { gameId } = useParams();
 
@@ -269,7 +269,7 @@ const TestGame = () => {
             gameEndSubscription.current.unsubscribe();
           };
         };
-      }, []);
+      }, [connect, gameId, user.token, handlePlayerListUpdate, handleVideoDataUpdate, handleGameUpdate, handleCommentsUpdate, handleDecisionSubmit, handleCurrentPlayer]);
 
   return (
     <div className = "game">
