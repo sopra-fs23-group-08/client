@@ -8,7 +8,7 @@ import Homepage from "components/views/Homepage";
 import Search from "components/views/Search";
 import Register from "../../views/Register";
 import Lobby from "../../views/Lobby";
-import Game from "../../views/TestGame";
+import Game from "../../views/Game";
 
 /**
  * Main router of your application.
