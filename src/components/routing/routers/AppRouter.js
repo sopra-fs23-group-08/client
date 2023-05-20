@@ -45,7 +45,7 @@ const AppRouter = () => {
           </HomeGuard>
         </Route>
         <Route path="/showdown">
-            <Showdown/>
+            <Showdown/>  {/* todo place this into the appropriate route */}
           </Route>
         <Route exact path="/register">
           <Register/>
