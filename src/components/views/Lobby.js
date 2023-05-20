@@ -119,7 +119,6 @@ const Lobby = () => {
     /** Websocket */
     const { stompClient } = useContext(StompContext);
     const { connect } = useContext(StompContext);
-    const { isConnected } = useContext(StompContext);
     const playersSubscription = useRef(null);
     const settingsSubscription = useRef(null);
     const gameStartSubscription = useRef(null);
@@ -216,7 +215,7 @@ const Lobby = () => {
     /** ON MOUNT/DISMOUNT */
     //NOSONAR
     useEffect(() => {
-        if (!isConnected) {
+        
         window.addEventListener("beforeunload", handleLeaveGame);
 
         // check if user is host -> able to modify settings
@@ -254,11 +253,8 @@ const Lobby = () => {
             );
         }
         connectSocket();
-    }else{
-        console.log("Websocket not connected")
-        connect();
-    }
-        //  cancel all subscriptions and asynchronous tasks when unmounting
+
+        // CLEANUP //
         return () => {
             // unsubscribe from all subscriptions TODO check if I need to await the unsubscribe calls
             if(settingsSubscription.current) settingsSubscription.current.unsubscribe();
@@ -267,8 +263,10 @@ const Lobby = () => {
             window.removeEventListener("beforeunload", handleLeaveGame);
             if(!gameStarting.current) handleLeaveGame();
         }
-    //NOSONAR
-    }, [connect, isConnected, gameId, history, user.name, user.token, handleLeaveGame, handlePlayerUpdate, handleSettingsUpdate, handleRemoteStartGame]);
+        //NOSONAR
+    }, []);
+
+
 
     /** Realtime Components */
     let playerList = <PlayerList list={players}/>;
@@ -329,9 +327,6 @@ const Lobby = () => {
                 </Grid>
             </Card>
         </Grid>
-    }else{
-        console.log("Host not set yet")
-        console.log("stompClient.current", stompClient.current)
     }
 
 

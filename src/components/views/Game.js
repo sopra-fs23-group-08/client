@@ -6,6 +6,7 @@ import HowToPlay from 'components/ui/HowToPlay';
 import ShowDown from 'components/ui/ShowDown';
 import EndOfGame from 'components/ui/EndOfGame';
 import { message } from 'antd';
+import { useCallback } from 'react';
 
 
 
@@ -50,15 +51,15 @@ const Game = () => {
         duration: "",
       });
 
-  const handleCommentsUpdate = (message) => {
+  const handleCommentsUpdate = useCallback((message) => {
       const data = JSON.parse(message.body);
         setComments(data);
-      }
+      }, []);
 
-  const handlePlayerListUpdate = (message) => {
+  const handlePlayerListUpdate = useCallback((message) => {
       const data = JSON.parse(message.body);
         setPlayerList(data);
-      };
+      }, []);
     
     const convertDuration = (duration) => {
       const match = duration.match(/PT(\d+)M(\d+)S/);
@@ -70,13 +71,13 @@ const Game = () => {
         return "";
       }
     
-    const handleVideoDataUpdate = (message) => {
+    const handleVideoDataUpdate = useCallback((message) => {
       const data = JSON.parse(message.body);
         data.duration = convertDuration(data.duration);
         setVideoData(data);
-      };
+      }, []);
 
-  const handleGameUpdate = (message) => {
+  const handleGameUpdate = useCallback((message) => {
       const data = JSON.parse(message.body);
           setPot(data.potAmount);
             setPlayerList(data.players);
@@ -84,9 +85,9 @@ const Game = () => {
             setSmallBlind(data.smallBlind);
             setCallAmount(data.callAmount);
             setGamePhase(data.gamePhase);
-        };
+  }, []);
     
-    const handleCurrentPlayer = (message) => {
+    const handleCurrentPlayer = useCallback((message) => {
       const data = JSON.parse(message.body);
         const currentPlayer = data.find((player) => player.currentPlayer === true);
         console.log('currentPlayer:', currentPlayer);
@@ -94,7 +95,66 @@ const Game = () => {
           setCurrentPlayer(currentPlayer);
             setCurrentPlayerUsername(currentPlayer.username);
           }
-      };
+      }, []);
+
+    
+      const handleDecisionSubmit = useCallback((decisionType, raiseAmount) => {
+        const gameId = location.pathname.split('/')[2];
+          const currentPlayer = playerList.find((player) => player.currentPlayer === true);
+          if (currentPlayer.token === localStorage.getItem('token')) {
+            const decisionData = {
+              decision: decisionType,
+              raiseAmount: raiseAmount,
+            }
+          stompClient.current.send(`/app/games/${gameId}/players/${token}/decision`, {}, JSON.stringify(decisionData));
+          }else{
+            message.error('It is not your turn!');
+            }
+        }, [location.pathname, playerList, stompClient, token]);
+      
+      const handleCall = () => {
+        const raiseAmount = parseInt(decisionAmount) || 0;
+          handleDecisionSubmit('CALL', raiseAmount);
+        };
+      
+      const handleRaise = () => {
+        const raiseAmount = parseInt(decisionAmount) || 0;
+          handleDecisionSubmit('RAISE', raiseAmount);
+        };
+      
+      
+      const handleLeaveGame = useCallback(() => {
+        setShowLeaveModal(true);
+        }, []);
+
+   //confirm leave
+      const handleConfirmLeave = () => {
+        const gameId = location.pathname.split('/')[2];
+          const username = localStorage.getItem('username');
+          const token = localStorage.getItem('token');
+          stompClient.current.send(`/app/games/${gameId}/players/remove`, {}, JSON.stringify({ username: username, token: token }));
+           //Update player list in front-end
+          handlePlayerListUpdate((prevPlayerList) => prevPlayerList.filter((player) => player.username !== username));
+          setShowLeaveModal(false);
+           //redirect to home page
+          console.log('history:', history);
+          history.push('/home');
+        };
+       //cancel leave
+      const handleCancelLeave = () => {
+        setShowLeaveModal(false);
+        };
+
+  const handleHelpClick = () => {
+        setShowHowToPlay(true);
+        };
+
+   //handle winner
+       //show down
+       //close show down
+      const handleCloseShowDown = () => {
+        setShowShowDown(false);
+        };
 
 
     useEffect(() => {
@@ -186,64 +246,6 @@ const Game = () => {
 
 
 
-
-    const handleDecisionSubmit = (decisionType, raiseAmount) => {
-          const gameId = location.pathname.split('/')[2];
-            const currentPlayer = playerList.find((player) => player.currentPlayer === true);
-            if (currentPlayer.token === localStorage.getItem('token')) {
-              const decisionData = {
-                decision: decisionType,
-                raiseAmount: raiseAmount,
-              }
-            stompClient.current.send(`/app/games/${gameId}/players/${token}/decision`, {}, JSON.stringify(decisionData));
-            }else{
-              message.error('It is not your turn!');
-              }
-          };
-        
-        const handleCall = () => {
-          const raiseAmount = parseInt(decisionAmount) || 0;
-            handleDecisionSubmit('CALL', raiseAmount);
-          };
-        
-        const handleRaise = () => {
-          const raiseAmount = parseInt(decisionAmount) || 0;
-            handleDecisionSubmit('RAISE', raiseAmount);
-          };
-        
-        
-        const handleLeaveGame = () => {
-          setShowLeaveModal(true);
-          };
-
-     //confirm leave
-        const handleConfirmLeave = () => {
-          const gameId = location.pathname.split('/')[2];
-            const username = localStorage.getItem('username');
-            const token = localStorage.getItem('token');
-            stompClient.current.send(`/app/games/${gameId}/players/remove`, {}, JSON.stringify({ username: username, token: token }));
-             //Update player list in front-end
-            handlePlayerListUpdate((prevPlayerList) => prevPlayerList.filter((player) => player.username !== username));
-            setShowLeaveModal(false);
-             //redirect to home page
-            console.log('history:', history);
-            history.push('/home');
-          };
-         //cancel leave
-        const handleCancelLeave = () => {
-          setShowLeaveModal(false);
-          };
-
-    const handleHelpClick = () => {
-          setShowHowToPlay(true);
-          };
-
-     //handle winner
-         //show down
-         //close show down
-        const handleCloseShowDown = () => {
-          setShowShowDown(false);
-          };
 
 
   return (
