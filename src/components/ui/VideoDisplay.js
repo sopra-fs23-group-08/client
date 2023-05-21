@@ -15,15 +15,16 @@ const VideoDisplay = (props) => {
     const parseNumber = (number) => {
         return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'");
     }
+
     return (
         <div className="video container">
-            <div className="video title">{props.title}</div>
-            <img className="video thumbnail" src={props.thumbnailUrl} alt="thumbnail"/>
+            {props.title ? <div className="video title">{props.title}</div> : null}
+            {props.thumbnailUrl ? <img className="video thumbnail" src={props.thumbnailUrl} alt="thumbnail"/> : null}
             <div className="video info">
-                <div>Released: {props.releaseDate}</div>
-                <div>Duration: {parseDuration(props.duration)}</div>
-                <div>Likes: {parseNumber(props.likes)}</div>
-                <div>Views: {parseNumber(props.views)}</div>
+                <div>Released: {props.releaseDate ? props.releaseDate : null}</div>
+                <div>Duration: {props.duration ? parseDuration(props.duration) : null}</div>
+                <div>Likes: {props.likes ? parseNumber(props.likes): null}</div>
+                <div>Views: {props.views? parseNumber(props.views): null}</div>
             </div>
         </div>
     )
