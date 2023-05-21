@@ -37,3 +37,10 @@ $borderRadius: 0.6em;
   align-items: center;
   justify-content: center;
 }
+
+@mixin card {
+  background-color: $white;
+  border-radius: 2.5em;
+  box-shadow: 1em 1em 2.5em #00000077;
+  display: flex;
+}
