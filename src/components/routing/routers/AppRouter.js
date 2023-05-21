@@ -9,6 +9,7 @@ import Search from "components/views/Search";
 import Register from "../../views/Register";
 import Lobby from "../../views/Lobby";
 import Game from "../../views/Game";
+import Showdown from "../../views/Showdown";
 import Game2 from "../../views/Game2";
 
 /**
@@ -44,6 +45,9 @@ const AppRouter = () => {
             <Homepage/>
           </HomeGuard>
         </Route>
+        <Route path="/showdown">
+            <Showdown/>  {/* todo place this into the appropriate route */}
+          </Route>
         <Route exact path="/register">
           <Register/>
         </Route>
