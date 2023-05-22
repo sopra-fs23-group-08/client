@@ -1,0 +1,38 @@
+@import 'src/styles/theme.scss';
+
+.hand {
+  &.comment {
+    @include card;
+    color: $black;
+    height: 80%;
+    width: 20%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+    margin: 0.5em;
+    font-size: 20px;
+  }
+  &.header {
+    font-weight: bold;
+    width: 100%;
+    justify-self: flex-start;
+    position: relative;
+    padding: 0.2em;
+  }
+  &.body {
+    width: 100%;
+    font-weight: lighter;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0.2em;
+  }
+  &.container {
+    height: 100%;
+    min-width: 80%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    align-items: center;
+  }
+}

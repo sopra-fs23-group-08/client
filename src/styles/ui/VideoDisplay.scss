@@ -1,0 +1,28 @@
+@import 'src/styles/theme';
+
+.video {
+  &.container {
+    @include card;
+    @include center;
+    flex-direction: column;
+    color: $black;
+    min-height: 80%;
+    min-width: 40%;
+  }
+  &.info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    padding: 2em;
+    font-size: 20px;
+  }
+  &.title {
+    font-size: 30px;
+    font-weight: bold;
+  }
+  &.thumbnail {
+    height: auto;
+    max-width: 80%;
+  }
+}

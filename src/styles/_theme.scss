@@ -1,6 +1,7 @@
 /* Theme Colors */
 
 $accent: #F3D388;
+$red: #EC635E;
 $white: #F7F7EF;
 $grey: #D5DDDC;
 $black: #181C1F;
@@ -36,4 +37,11 @@ $borderRadius: 0.6em;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+@mixin card {
+  background-color: $white;
+  border-radius: 2.5em;
+  box-shadow: 1em 1em 2.5em #00000077;
+  display: flex;
 }
