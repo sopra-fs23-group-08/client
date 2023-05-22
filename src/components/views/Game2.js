@@ -10,6 +10,7 @@ import "styles/views/Game2.scss";
 import ScoreBoard from "../ui/ScoreBoard";
 import VideoDisplay from "../ui/VideoDisplay";
 import PlayerHand from "../ui/PlayerHand";
+import {Button} from "../ui/Button";
 
 const Game2 = () => {
     /** View/Context info */
@@ -132,16 +133,6 @@ const Game2 = () => {
         setShowErrorMessage(false)
     }
 
-    const errorStyle = {
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        backgroundColor: 'white',
-        padding: '20px',
-        color: 'black'
-    }
-
     /** Player Decision Handlers */
     const handlePlayerBet = () => {
         // TODO check if player score is enough to call >> all-in if not (?)
@@ -201,11 +192,10 @@ const Game2 = () => {
                     <div className="game content footer">
                         <PlayerHand comments={comments}/>
                     </div>
-
                     {showErrorMessage && (
-                        <div style={errorStyle}>
-                        <p>Error Message: {errorMessage}</p>
-                        <button onClick={handleCloseError}>Close</button>
+                        <div className="game error">
+                            <p>Error Message: {errorMessage}</p>
+                            <Button onClick={handleCloseError}>Close</Button>
                         </div>
                     )}
                 </div>

@@ -40,4 +40,21 @@
     color: $black;
     padding: 0.5em;
   }
+  &.error {
+    position: fixed;
+    top: 0;
+    left: 0;
+    margin: 1em;
+    justify-self: flex-start;
+    color: $black;
+    font-size: 15px;
+    max-width: 30%;
+    max-height: 30%;
+    overflow: auto;
+    padding: 1em;
+    @include card;
+    @include center;
+    background-color: $red;
+    flex-direction: column;
+  }
 }
