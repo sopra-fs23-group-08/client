@@ -1,5 +1,5 @@
 import {useContext, useEffect, useRef, useState} from "react";
-import {useParams} from "react-router-dom";
+import {useHistory, useParams} from "react-router-dom";
 import StompContext from "../contexts/StompContext";
 import Player from "../../models/Player";
 import UserContext from "../contexts/UserContext";
@@ -11,6 +11,7 @@ import ScoreBoard from "../ui/ScoreBoard";
 import VideoDisplay from "../ui/VideoDisplay";
 import PlayerHand from "../ui/PlayerHand";
 import {Button} from "../ui/Button";
+import SettingsData from "../../models/SettingsData";
 
 const Game2 = () => {
     /** View/Context info */
@@ -18,6 +19,7 @@ const Game2 = () => {
     const { stompClient } = useContext(StompContext);
     const { connect } = useContext(StompContext);
     const { user } = useContext(UserContext)
+    const history = useHistory();
     const isMounted = useRef(false)
 
     /** Game state */
@@ -25,6 +27,7 @@ const Game2 = () => {
     const [currentBet, setCurrentBet] = useState(0)
     const [currentPot, setCurrentPot] = useState(0)
     const [gamePhase, setGamePhase] = useState("")
+    const [settings, setSettings] = useState(new SettingsData())
 
     /** Video data */
     const [videoData, setVideoData] = useState(null)
@@ -45,11 +48,12 @@ const Game2 = () => {
     const gameEndSubscription = useRef(null)
     const commentsSubscription = useRef(null)
     const showDownSubscription = useRef(null)
+    const settingsSubscription = useRef(null)
     const errorSubscription = useRef(null)
 
     /** Mounting & Cleanup */
     useEffect(() => {
-
+        console.log("MOUNTING NOW MF")
         setPlayer(new Player())
         // TODO this is mock data, should be replaced by actual data from backend
         const websocketSetup = async () => {
@@ -59,6 +63,7 @@ const Game2 = () => {
             playersSubscription.current = stompClient.current.subscribe(`/topic/games/${gameId}/players`, handlePlayersUpdate)
             gameStateSubscription.current = stompClient.current.subscribe(`/topic/games/${gameId}/state`, handleGameStateUpdate)
             videoDataSubscription.current = stompClient.current.subscribe(`/topic/games/${gameId}/video`, handleVideoDataUpdate)
+            settingsSubscription.current = stompClient.current.subscribe(`/topic/games/${gameId}/settings`, handleSettingsUpdate)
             gameEndSubscription.current = stompClient.current.subscribe(`/topic/games/${gameId}/end`, handleGameEnd)
             commentsSubscription.current = stompClient.current.subscribe(`/topic/games/${gameId}/players/${user.token}/hand`, handleNewHand)
             showDownSubscription.current = stompClient.current.subscribe(`/topic/games/${gameId}/showdown`, handleShowDown)
@@ -67,6 +72,7 @@ const Game2 = () => {
         // get all info
         websocketSetup().then(() => {
             stompClient.current.send(`/app/games/${gameId}/sendData`, {}, "gimme data blease")
+            stompClient.current.send(`/app/games/${gameId}/resendSettings`, {}, "gimme settings blease")
             stompClient.current.send(`/app/games/${gameId}/players/${user.token}/sendHand`, {}, "gimme comments blease")
         });
 
@@ -98,6 +104,11 @@ const Game2 = () => {
         if(isMounted.current) {
             setPlayers(playerArray)
         }
+        if (playerArray.length <= 1) {
+            // TODO implement handle leave game, use it here (?)
+            alert("You are the only player left in the game. You will be redirected to the homepage.")
+            history.push("/home")
+        }
     }
     const handleGameStateUpdate = (message) => {
         const gameState = JSON.parse(message.body)
@@ -113,7 +124,13 @@ const Game2 = () => {
         if(isMounted.current) {
             setVideoData(data)
         }
-     }
+    }
+    const handleSettingsUpdate = (message) => {
+        const settings = JSON.parse(message.body)
+        if(isMounted.current) {
+            setSettings(settings)
+        }
+    }
     const handleNewHand = (message) => {
         const hand = JSON.parse(message.body)
         setComments(hand)
@@ -158,6 +175,16 @@ const Game2 = () => {
             JSON.stringify({decision, raiseAmount}));
     }
 
+    let blindPrompt = null;
+    if(gamePhase === "FIRST_BETTING_ROUND") {
+        if (player.smallBlind) {
+            blindPrompt = `You are the small blind, please place a bet of ${settings.smallBlind} points as your first move`
+        }
+        else if (player.bigBlind) {
+            blindPrompt = `You are the big blind, please place a bet of ${settings.bigBlind} points as your first move`
+        }
+    }
+
     let content = <Spinner/>
 
     if(player) {
@@ -179,6 +206,11 @@ const Game2 = () => {
                                 <div>Round: {gamePhase}</div>
                                 <div>Current Pot: {currentPot}</div>
                             </div>
+                            {blindPrompt && (
+                                <div className="game blind-prompt">
+                                    {blindPrompt}
+                                </div>
+                            )}
                             <PlayerButtons isCurrentPlayer={player.currentPlayer}
                                            currentBet={currentBet}
                                            playerScore={player.score}

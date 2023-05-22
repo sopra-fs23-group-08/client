@@ -59,4 +59,13 @@
     background-color: $red;
     flex-direction: column;
   }
+  &.blind-prompt {
+    @include card;
+    @include center;
+    font-size: 15px;
+    padding: 1em;
+    margin: 1em;
+    background-color: $accent;
+    color: $black;
+  }
 }
