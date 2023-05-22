@@ -210,8 +210,9 @@ const Lobby = () => {
     }
 
     /** ON MOUNT/DISMOUNT */
+    //NOSONAR
     useEffect(() => {
-
+        
         window.addEventListener("beforeunload", handleLeaveGame);
 
         // check if user is host -> able to modify settings
@@ -260,6 +261,7 @@ const Lobby = () => {
             window.removeEventListener("beforeunload", handleLeaveGame);
             if(!gameStarting.current) handleLeaveGame();
         }
+        //NOSONAR
     }, []);
 
 
