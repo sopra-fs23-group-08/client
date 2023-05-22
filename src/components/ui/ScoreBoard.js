@@ -2,6 +2,7 @@ import 'styles/ui/ScoreBoard.scss';
 
 const ScoreBoard = (props) => {
 
+    // TODO: add players current bet
     return (
         <div className={"scoreboard container"}>
             <div className={"base-card"}>
@@ -17,7 +18,9 @@ const ScoreBoard = (props) => {
                         <div className={"scoreboard player box"} key={index}>
                             {indicator}
                             <div className={"scoreboard player info"}>
-                                <div>{player.username} - Score: {player.score}</div>
+                                <div>
+                                    <b> {player.username} | {player.score} points</b>
+                                </div>
                                 <div>{player.lastDecision}</div>
                             </div>
                         </div>
