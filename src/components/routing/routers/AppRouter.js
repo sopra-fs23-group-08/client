@@ -10,6 +10,7 @@ import Register from "../../views/Register";
 import Lobby from "../../views/Lobby";
 import Game from "../../views/Game";
 import Showdown from "../../views/Showdown";
+import Game2 from "../../views/Game2";
 
 /**
  * Main router of your application.
@@ -37,7 +38,7 @@ const AppRouter = () => {
             <Lobby/>
           </Route>
           <Route path="/games/:gameId">
-            <Game/>
+            <Game2/>
           </Route>
         <Route path="/home">
           <HomeGuard>

@@ -244,14 +244,14 @@ const Lobby = () => {
 
             // TODO: catch errors somehow - WS errors are not propagated to the client yet
             const name = user.name;
-            const token = localStorage.getItem("token");
+            const token = user.token;
             const requestBody = JSON.stringify({name, token});
-            client.send(
+                client.send(
                 `/app/games/${gameId}/players/add`,
                 {},
                 requestBody
-            );
-        }
+                );
+            }
         connectSocket();
 
         // CLEANUP //

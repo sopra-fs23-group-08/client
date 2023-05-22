@@ -1,0 +1,60 @@
+@import 'src/styles/theme';
+
+.game {
+  &.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+    width: 100vw;
+    height: 100vh;
+    font-size: 20px;
+  }
+  &.content {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    align-items: center;
+    min-width: 100%;
+    &.main {
+      min-height: 70%;
+    }
+    &.footer {
+      height: 30%;
+      align-self: flex-end;
+    }
+    &.sidebar {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-evenly;
+      align-items: flex-end;
+    }
+  }
+  &.info {
+    @include card;
+    @include center;
+    flex-direction: column;
+    width: 100%;
+    font-size: 25px;
+    font-weight: bold;
+    color: $black;
+    padding: 0.5em;
+  }
+  &.error {
+    position: fixed;
+    top: 0;
+    left: 0;
+    margin: 1em;
+    justify-self: flex-start;
+    color: $black;
+    font-size: 15px;
+    max-width: 30%;
+    max-height: 30%;
+    overflow: auto;
+    padding: 1em;
+    @include card;
+    @include center;
+    background-color: $red;
+    flex-direction: column;
+  }
+}
