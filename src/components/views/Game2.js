@@ -33,6 +33,10 @@ const Game2 = () => {
     const [playerBet, setPlayerBet] = useState(0);
     const [comments, setComments] = useState([])
 
+    /** handle error messages */
+    const [errorMessage, setErrorMessage] = useState(null)
+    const [showErrorMessage, setShowErrorMessage] = useState(false)
+
     /** Websocket subscriptions */
     const playersSubscription = useRef(null)
     const gameStateSubscription = useRef(null)
@@ -118,7 +122,25 @@ const Game2 = () => {
 
     const handleShowDown = () => {}
 
-    const handleError = () => {}
+    const handleError = (message) => {
+        const errorMessage = JSON.parse(message.body).message
+        console.log(errorMessage)
+        setErrorMessage(errorMessage)
+        setShowErrorMessage(true)
+    }
+    const handleCloseError = () => {
+        setShowErrorMessage(false)
+    }
+    const errorStyle = {
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        backgroundColor: '#f2f2f2',
+        backgroundColor: 'white',
+        padding: '20px',
+        color: 'black'
+    }
 
     /** Player Decision Handlers */
     const handlePlayerBet = () => {
@@ -179,6 +201,13 @@ const Game2 = () => {
                     <div className="game content footer">
                         <PlayerHand comments={comments}/>
                     </div>
+
+                    {showErrorMessage && (
+                        <div style={errorStyle}>
+                        <p>Error Message: {errorMessage}</p>
+                        <button onClick={handleCloseError}>Close</button>
+                        </div>
+                    )}
                 </div>
             </BaseContainer>
         )
