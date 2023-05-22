@@ -124,7 +124,6 @@ const Lobby = () => {
     const gameStartSubscription = useRef(null);
 
     /** Handler functions */
-
     const handlePlayerUpdate = (message) => {
         const playerArray = JSON.parse(message.body);
         // Only update the state if there are changes to the player list
@@ -142,14 +141,12 @@ const Lobby = () => {
             setSmallBlind(settingsData.smallBlind.toString())
         }
     }
-
     const handleRemoteStartGame = (message) => {
         console.log("Received start game message:", message.data);
         gameStarting.current = true;
         isMounted.current = false;
         history.push(`/games/${gameId}`);
     }
-
 
     const handleStartGame = () => {
         if(players.length < 2) {
@@ -239,6 +236,7 @@ const Lobby = () => {
             if(!isHost.current) {
                 settingsSubscription.current = client.subscribe(`/topic/games/${gameId}/settings`, handleSettingsUpdate)
                 gameStartSubscription.current = client.subscribe(`/topic/games/${gameId}/start`, handleRemoteStartGame)
+                client.send(`/app/games/${gameId}/resendSettings`, {}, "gimme settings blease")
             }
 
             // TODO: catch errors somehow - WS errors are not propagated to the client yet
