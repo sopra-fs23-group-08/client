@@ -6,8 +6,6 @@ import {getDomain} from "../../helpers/getDomain";
 const StompContext = createContext({});
 
 export function StompProvider (props) {
-  //const [stompClient, setStompClient] = useState(null);
-  //const [isConnected, setIsConnected] = useState(false);
 
   const stompClient = useRef(null);
   const isConnected = useRef(false);
@@ -31,44 +29,23 @@ export function StompProvider (props) {
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (stompClient) {
-      localStorage.setItem('storedClient', JSON.stringify(stompClient.current));
-      }
-      if (isConnected) {
-      localStorage.setItem('storedIsConnected', JSON.stringify(isConnected.current));
+        alert("Websocket disconnected! You might need to start a new game.")
+        stompClient.current.disconnect();
+        isConnected.current = false;
       }
     }
     window.addEventListener('beforeunload', handleBeforeUnload)
-    // Load data from local storage on component mount
-    const storedClient = localStorage.getItem('storedClient');
-    const storedIsConnected = localStorage.getItem('storedIsConnected');
-    if (storedClient) {
-      stompClient.current = (JSON.parse(storedClient));
-    }
-    if (storedIsConnected) {
-      isConnected.current = (JSON.parse(storedIsConnected));
-    }
-    
-    //unmount if closed
+
+    // disconnect & remove beforeunload listener on component unmount
     return () => {
         if (stompClient.current) {
             stompClient.current.disconnect();
             isConnected.current = false;
-      }
-      window.removeEventListener('beforeunload', handleBeforeUnload)
+        }
+        window.removeEventListener('beforeunload', handleBeforeUnload)
     }
   }, []);
 
-  /* disconnect the Stomp client on unmount
-  useEffect(() => {
-    return () => {
-      if (stompClient) {
-        stompClient.disconnect();
-        setIsConnected(false);
-      }
-    };
-  }, [stompClient]);*/
-
-  // check if the Stomp client is connected
 
   return (
     <StompContext.Provider value={{ stompClient, isConnected, connect }}>
