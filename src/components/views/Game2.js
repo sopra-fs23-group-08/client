@@ -131,12 +131,12 @@ const Game2 = () => {
     const handleCloseError = () => {
         setShowErrorMessage(false)
     }
+
     const errorStyle = {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
         height: '100vh',
-        backgroundColor: '#f2f2f2',
         backgroundColor: 'white',
         padding: '20px',
         color: 'black'
@@ -145,7 +145,7 @@ const Game2 = () => {
     /** Player Decision Handlers */
     const handlePlayerBet = () => {
         // TODO check if player score is enough to call >> all-in if not (?)
-        const raiseAmount = playerBet - Number(currentBet);
+        const raiseAmount = playerBet;
         console.log("RAISED BY " + raiseAmount)
         console.log("PlayerBet " + playerBet)
         console.log("currentBet " + currentBet)
@@ -188,7 +188,7 @@ const Game2 = () => {
                                 <div>Round: {gamePhase}</div>
                                 <div>Current Pot: {currentPot}</div>
                             </div>
-                            <PlayerButtons isCurrentPlayer={true} //player.currentPlayer}
+                            <PlayerButtons isCurrentPlayer={player.currentPlayer}
                                            currentBet={currentBet}
                                            playerScore={player.score}
                                            playerBet={playerBet}
