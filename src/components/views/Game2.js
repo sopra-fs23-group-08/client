@@ -173,7 +173,7 @@ const Game2 = () => {
                                       likes={videoData.likes}
                                       views={videoData.views}
                         /> : <Spinner/>}
-                        <div className="game sidebar">
+                        <div className="game content sidebar">
                             <div className="game info">
                                 <div>INFO</div>
                                 <div>Round: {gamePhase}</div>
