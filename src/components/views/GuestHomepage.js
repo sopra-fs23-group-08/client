@@ -134,10 +134,10 @@ const GuestHomepage = () => {
                             className={classes.cardBar}
                         >
                             <Avatar className={classes.headerAvatar}>
-                                {user.name.charAt(0)}
+                                {user ? user.name.charAt(0) :("")}
                             </Avatar>
                             <Typography className={classes.headerTitle}>
-                                Playing as {user.name}
+                                Playing as {user ? user.name : "no User"}
                             </Typography>
                             <button color = {'inherit'}  onClick={toggleHowToPlay}>How to Play</button>
                                 {/* Show how to play window when "help" button is clicked */}

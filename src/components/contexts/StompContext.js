@@ -29,11 +29,32 @@ export function StompProvider (props) {
 
   /** CLEANUP */
   useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (stompClient) {
+      localStorage.setItem('storedClient', JSON.stringify(stompClient.current));
+      }
+      if (isConnected) {
+      localStorage.setItem('storedIsConnected', JSON.stringify(isConnected.current));
+      }
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    // Load data from local storage on component mount
+    const storedClient = localStorage.getItem('storedClient');
+    const storedIsConnected = localStorage.getItem('storedIsConnected');
+    if (storedClient) {
+      stompClient.current = (JSON.parse(storedClient));
+    }
+    if (storedIsConnected) {
+      isConnected.current = (JSON.parse(storedIsConnected));
+    }
+    
+    //unmount if closed
     return () => {
         if (stompClient.current) {
             stompClient.current.disconnect();
             isConnected.current = false;
-        }
+      }
+      window.removeEventListener('beforeunload', handleBeforeUnload)
     }
   }, []);
 
@@ -58,7 +79,3 @@ export function StompProvider (props) {
 
 
 export default StompContext;
-
-
-
-

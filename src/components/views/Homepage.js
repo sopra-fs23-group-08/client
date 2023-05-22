@@ -1,16 +1,8 @@
-// import BaseContainer from "../ui/BaseContainer";
 
-// const Homepage = () => {
-//     return (
-//         <BaseContainer>
-//             <div>
-//                 <h1>Homepage</h1>
-//             </div>
-//         </BaseContainer>
-//     );
-// };
 
-// export default Homepage;
+
+
+
 
 import {useHistory} from "react-router-dom";
 import {
@@ -120,6 +112,7 @@ const Homepage = () => {
 
     const openProfile = () => {
         // TODO implement
+        //
     }
 
     const handleLobbyIDChange = (e) => {setLobbyID(e.target.value)}
