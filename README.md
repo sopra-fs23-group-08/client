@@ -7,7 +7,7 @@ Yuker Tuker-Client
 </h1>
 
 ## Introduction
-Yuker Tuker is an exciting and competitive game that allows players to compete against each other in guessing a random YouTube video from a selected playlist, using a similar logic to poker. This is the back-end component of our project. The front-end part can be found [here](https://github.com/sopra-fs23-group-08/client).
+Yuker Tuker is an exciting and competitive game that allows players to compete against each other in guessing a random YouTube video from a selected playlist, using a similar logic to poker. This is the front-end component of our project. The back-end part can be found [here](https://github.com/sopra-fs23-group-08/server).
 
 
 ## Technologies
