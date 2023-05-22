@@ -28,7 +28,7 @@ export function StompProvider (props) {
   /** CLEANUP */
   useEffect(() => {
     const handleBeforeUnload = () => {
-      if (stompClient) {
+      if (stompClient.current) {
         alert("Websocket disconnected! You might need to start a new game.")
         stompClient.current.disconnect();
         isConnected.current = false;
