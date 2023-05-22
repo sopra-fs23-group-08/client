@@ -21,7 +21,7 @@ const ScoreBoard = (props) => {
                                 <div>
                                     <b> {player.username} | {player.score} points</b>
                                 </div>
-                                <div>{player.lastDecision}</div>
+                                <div>{player.lastDecision === "NOT_DECIDED" ? null : player.lastDecision}</div>
                             </div>
                         </div>
                     )
