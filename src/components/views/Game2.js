@@ -33,7 +33,7 @@ const Game2 = () => {
     const [videoData, setVideoData] = useState(null)
 
     /** Player specific data*/
-    const [player, setPlayer] = useState(null)
+    const [player, setPlayer] = useState(new Player())
     const [playerBet, setPlayerBet] = useState(0);
     const [comments, setComments] = useState([])
 
@@ -49,13 +49,14 @@ const Game2 = () => {
     const commentsSubscription = useRef(null)
     const showDownSubscription = useRef(null)
     const settingsSubscription = useRef(null)
+    const closeGameSubscription = useRef(null)
     const errorSubscription = useRef(null)
 
     /** Mounting & Cleanup */
     useEffect(() => {
-        console.log("MOUNTING NOW MF")
-        setPlayer(new Player())
-        // TODO this is mock data, should be replaced by actual data from backend
+
+        window.addEventListener("beforeunload", handleLeaveGame)
+
         const websocketSetup = async () => {
             if (!stompClient.current) {
                 stompClient.current = connect();
@@ -67,6 +68,7 @@ const Game2 = () => {
             gameEndSubscription.current = stompClient.current.subscribe(`/topic/games/${gameId}/end`, handleGameEnd)
             commentsSubscription.current = stompClient.current.subscribe(`/topic/games/${gameId}/players/${user.token}/hand`, handleNewHand)
             showDownSubscription.current = stompClient.current.subscribe(`/topic/games/${gameId}/showdown`, handleShowDown)
+            closeGameSubscription.current = stompClient.current.subscribe(`/topic/games/${gameId}/close`, handleCloseGame)
             errorSubscription.current = stompClient.current.subscribe(`/topic/games/${gameId}/error`, handleError)
         }
         // get all info
@@ -87,7 +89,10 @@ const Game2 = () => {
             if(gameEndSubscription.current) gameEndSubscription.current.unsubscribe()
             if(commentsSubscription.current) commentsSubscription.current.unsubscribe()
             if(showDownSubscription.current) showDownSubscription.current.unsubscribe()
+            if(closeGameSubscription.current) closeGameSubscription.current.unsubscribe()
             if(errorSubscription.current) errorSubscription.current.unsubscribe()
+
+            window.removeEventListener("beforeunload", handleLeaveGame)
 
             isMounted.current = false;
         }
@@ -103,11 +108,6 @@ const Game2 = () => {
         })
         if(isMounted.current) {
             setPlayers(playerArray)
-        }
-        if (playerArray.length <= 1) {
-            // TODO implement handle leave game, use it here (?)
-            alert("You are the only player left in the game. You will be redirected to the homepage.")
-            history.push("/home")
         }
     }
     const handleGameStateUpdate = (message) => {
@@ -140,12 +140,33 @@ const Game2 = () => {
 
     const handleShowDown = () => {}
 
+    const closeGame = () => {
+        stompClient.current.send(`/app/games/${gameId}/close`, {}, "close blease")
+    }
+
+    const handleCloseGame = () => {
+        console.log("HANDLE CLOSE GAME TRIGGERED")
+        alert("A player has left the game in progress. You will be redirected homepage.")
+        history.push("/home")
+    }
+
+    const handleLeaveGame = () => {
+        const destination = `/app/games/${gameId}/players/remove`
+        const token = user.token;
+        const name = user.name;
+        const requestBody = JSON.stringify({ name, token });
+        stompClient.current.send(destination, {}, requestBody);
+        closeGame();
+        history.push("/home")
+    }
+
     const handleError = (message) => {
         const errorMessage = JSON.parse(message.body).message
         console.log(errorMessage)
         setErrorMessage(errorMessage)
         setShowErrorMessage(true)
     }
+
     const handleCloseError = () => {
         setShowErrorMessage(false)
     }
@@ -201,6 +222,7 @@ const Game2 = () => {
                                       views={videoData.views}
                         /> : <Spinner/>}
                         <div className="game content sidebar">
+                            <Button onClick={handleLeaveGame}>Leave Game</Button>
                             <div className="game info">
                                 <div>INFO</div>
                                 <div>Round: {gamePhase}</div>
