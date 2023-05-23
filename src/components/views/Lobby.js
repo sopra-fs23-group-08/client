@@ -272,6 +272,7 @@ const Lobby = () => {
             // unsubscribe from all subscriptions TODO check if I need to await the unsubscribe calls
             if(settingsSubscription.current) settingsSubscription.current.unsubscribe();
             if(playersSubscription.current) playersSubscription.current.unsubscribe();
+            if(gameCloseSubscription.current) gameCloseSubscription.current.unsubscribe();
             if(gameStartSubscription.current) gameStartSubscription.current.unsubscribe();
             window.removeEventListener("beforeunload", handleLeaveGame);
             if(!gameStarting.current) handleLeaveGame();
