@@ -107,7 +107,7 @@ const Lobby = () => {
     const { user } = useContext(UserContext);
     const [players, setPlayers] = useState([]);
     const [host, setHost] = useState(null);
-    const isHost = useRef(false);
+    const [isHost, setIsHost] = useState(false);
 
     /** Settings TODO: remove standard youtube URL --> account for absent/false input */
     const [language, setLanguage] = useState("ENGLISH");
@@ -172,14 +172,14 @@ const Lobby = () => {
         const name = user.name;
         const requestBody = JSON.stringify({ name, token });
         stompClient.current.send(destination, {}, requestBody);
-        if(isHost.current) {
+        if(isHost) {
             stompClient.current.send(`/app/games/${gameId}/close`, {}, "close blease");
         }
         history.push("/home");
     }
 
     const handleGameClosed = () => {
-        if(!isHost.current) {
+        if(!isHost) {
             alert("The host has left the game. You will be redirected to the homepage.");
             history.push("/home");
         }
@@ -236,7 +236,7 @@ const Lobby = () => {
             const hostPlayer = new Player(response.data);
             setHost(hostPlayer);
             if (hostPlayer.token === user.token) {
-                isHost.current = true;
+                setIsHost(true);
             }
         }
         checkHost();
@@ -248,7 +248,7 @@ const Lobby = () => {
             // SUBSCRIPTIONS //
             playersSubscription.current = client.subscribe(`/topic/games/${gameId}/players`, handlePlayerUpdate)
 
-            if(!isHost.current) {
+            if(!isHost) {
                 settingsSubscription.current = client.subscribe(`/topic/games/${gameId}/settings`, handleSettingsUpdate)
                 gameStartSubscription.current = client.subscribe(`/topic/games/${gameId}/start`, handleRemoteStartGame)
                 gameCloseSubscription.current = client.subscribe(`/topic/games/${gameId}/close`, handleGameClosed)
@@ -285,7 +285,7 @@ const Lobby = () => {
     /** Realtime Components */
     let playerList = <PlayerList list={players}/>;
 
-    let settings = <GameSettings isHost={isHost.current}
+    let settings = <GameSettings isHost={isHost}
                                  // variables
                                  language={language}
                                  balance={initialBalance}
@@ -312,7 +312,7 @@ const Lobby = () => {
                             {host.name}'s lobby
                         </Typography>
                         <Button variant={"contained"}
-                                disabled={!isHost.current || players.length < 2}
+                                disabled={!isHost || players.length < 2}
                                 onClick={handleStartGame}
                         >
                             Start Game
