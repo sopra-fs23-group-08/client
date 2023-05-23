@@ -166,7 +166,6 @@ const Lobby = () => {
         const token = user.token;
         const name = user.name;
         const requestBody = JSON.stringify({ name, token });
-        // TODO catch exceptions somehow
         stompClient.current.send(destination, {}, requestBody);
         history.push("/home");
     }
