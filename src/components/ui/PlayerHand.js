@@ -1,6 +1,12 @@
 import 'styles/ui/PlayerHand.scss'
 import PropTypes from "prop-types";
 
+const HtmlComponent = ({ html }) => {
+  const formattedString = { __html: html };
+
+  return <div dangerouslySetInnerHTML={formattedString} />;
+};
+
 const PlayerHand = (props) => {
 
     const comments = props.comments.map((comment, index) => {
@@ -10,7 +16,7 @@ const PlayerHand = (props) => {
                     {comment.first.author}
                 </div>
                 <div className="hand body">
-                    {comment.first.content}
+                    <HtmlComponent html={comment.first.content}/>
                 </div>
             </div>
         )
