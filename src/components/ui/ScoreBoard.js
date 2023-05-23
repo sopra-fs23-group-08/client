@@ -7,7 +7,7 @@ const ScoreBoard = (props) => {
         <div className={"scoreboard container"}>
             <div className={"base-card"}>
                 {props.list.map((player, index) => {
-                    let indicator = null
+                    let indicator;
                     if(player.currentPlayer) {
                         indicator = <div className={"scoreboard indicator active"}/>
                     }
@@ -21,7 +21,7 @@ const ScoreBoard = (props) => {
                                 <div>
                                     <b> {player.username} | {player.score} points</b>
                                 </div>
-                                <div>{player.lastDecision === "NOT_DECIDED" ? null : player.lastDecision}</div>
+                                <div>{player.scorePutIntoPot ? player.scorePutIntoPot + " points" : null} | {player.lastDecision === "NOT_DECIDED" ? null : player.lastDecision}</div>
                             </div>
                         </div>
                     )
