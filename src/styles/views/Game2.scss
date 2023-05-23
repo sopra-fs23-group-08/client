@@ -62,6 +62,9 @@
   &.blind-prompt {
     @include card;
     @include center;
+    position: fixed;
+    top: 0;
+    left: 0;
     font-size: 15px;
     padding: 1em;
     margin: 1em;
