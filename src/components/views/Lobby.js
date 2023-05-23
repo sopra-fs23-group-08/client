@@ -155,9 +155,13 @@ const Lobby = () => {
             return;
         }
         gameStarting.current = true;
-        stompClient.current.send(`/app/games/${gameId}/start`, {}, "start blease");
-        isMounted.current = false;
-        history.push(`/games/${gameId}`);
+        handleSettingsSave().then(
+            () => {
+                stompClient.current.send(`/app/games/${gameId}/start`, {}, "start blease");
+                isMounted.current = false;
+                history.push(`/games/${gameId}`);
+            }
+        )
     };
 
     const handleLeaveGame = () => {
