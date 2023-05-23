@@ -122,6 +122,7 @@ const Lobby = () => {
     const playersSubscription = useRef(null);
     const settingsSubscription = useRef(null);
     const gameStartSubscription = useRef(null);
+    const gameCloseSubscription = useRef(null);
 
     /** Handler functions */
     const handlePlayerUpdate = (message) => {
@@ -167,7 +168,17 @@ const Lobby = () => {
         const name = user.name;
         const requestBody = JSON.stringify({ name, token });
         stompClient.current.send(destination, {}, requestBody);
+        if(isHost.current) {
+            stompClient.current.send(`/app/games/${gameId}/close`, {}, "close blease");
+        }
         history.push("/home");
+    }
+
+    const handleGameClosed = () => {
+        if(!isHost.current) {
+            alert("The host has left the game. You will be redirected to the homepage.");
+            history.push("/home");
+        }
     }
 
     function isPositiveInteger(n) {
@@ -236,6 +247,7 @@ const Lobby = () => {
             if(!isHost.current) {
                 settingsSubscription.current = client.subscribe(`/topic/games/${gameId}/settings`, handleSettingsUpdate)
                 gameStartSubscription.current = client.subscribe(`/topic/games/${gameId}/start`, handleRemoteStartGame)
+                gameCloseSubscription.current = client.subscribe(`/topic/games/${gameId}/close`, handleGameClosed)
                 client.send(`/app/games/${gameId}/resendSettings`, {}, "gimme settings blease")
             }
 
