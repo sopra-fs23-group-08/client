@@ -3,6 +3,7 @@
 .hand {
   &.comment {
     @include card;
+    border-radius: 1em 1em 0 0;
     color: $black;
     height: 80%;
     width: 20%;
