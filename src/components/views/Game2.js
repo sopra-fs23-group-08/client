@@ -199,10 +199,10 @@ const Game2 = () => {
     let blindPrompt = null;
     if(gamePhase === "FIRST_BETTING_ROUND") {
         if (player.smallBlind) {
-            blindPrompt = `You are the small blind, please place a bet of ${settings.smallBlind} points as your first move`
+            blindPrompt = `You are the small blind, ${settings.smallBlind} points were deducted from your score.`
         }
         else if (player.bigBlind) {
-            blindPrompt = `You are the big blind, please place a bet of ${settings.bigBlind} points as your first move`
+            blindPrompt = `You are the big blind, ${settings.bigBlind} points were deducted from your score.`
         }
     }
 
