@@ -12,6 +12,11 @@ const VideoDisplay = (props) => {
         return "";
     }
 
+    const parseDate = (date) => {
+        const dateString = date.slice(4)
+        return dateString.replace(/\s\d{2}:\d{2}:\d{2}\sCEST/, "")
+    }
+
     const parseNumber = (number) => {
         return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'");
     }
@@ -21,10 +26,9 @@ const VideoDisplay = (props) => {
             {props.title ? <div className="video title">{props.title}</div> : null}
             {props.thumbnailUrl ? <img className="video thumbnail" src={props.thumbnailUrl} alt="thumbnail"/> : null}
             <div className="video info">
-                <div>Released: {props.releaseDate ? props.releaseDate : null}</div>
-                <div>Duration: {props.duration ? parseDuration(props.duration) : null}</div>
-                <div>Likes: {props.likes ? parseNumber(props.likes): null}</div>
-                <div>Views: {props.views? parseNumber(props.views): null}</div>
+                <div>• {props.duration ? parseDuration(props.duration) : null}, posted on {props.releaseDate ? parseDate(props.releaseDate) : null}</div>
+                <div>• {props.likes ? parseNumber(props.likes): null} likes</div>
+                <div>• {props.views? parseNumber(props.views): null} views</div>
             </div>
         </div>
     )

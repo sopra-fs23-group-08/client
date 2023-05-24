@@ -7,7 +7,7 @@
     flex-direction: column;
     color: $black;
     min-height: 80%;
-    min-width: 40%;
+    max-width: 50%;
   }
   &.info {
     display: flex;
@@ -22,7 +22,7 @@
     font-weight: bold;
   }
   &.thumbnail {
+    width: 30%;
     height: auto;
-    max-width: 80%;
   }
 }
