@@ -213,6 +213,23 @@ const Game2 = () => {
         }
     }
 
+    const parseGamePhase = (gamePhase) => {
+        switch(gamePhase) {
+            case "FIRST_BETTING_ROUND":
+                return "First Betting Round"
+            case "SECOND_BETTING_ROUND":
+                return "Second Betting Round"
+            case "THIRD_BETTING_ROUND":
+                return "Third Betting Round"
+            case "FOURTH_BETTING_ROUND":
+                return "Fourth Betting Round"
+            case "END_AFTER_FOURTH_BETTING_ROUND":
+                return "Game over"
+            default:
+                return "Starting..."
+        }
+    }
+
     let content = <Spinner/>
 
     if(player) {
@@ -231,9 +248,8 @@ const Game2 = () => {
                         <div className="game content sidebar">
                             <Button onClick={handleLeaveGame}>Leave Game</Button>
                             <div className="game info">
-                                <div>INFO</div>
-                                <div>Round: {gamePhase}</div>
-                                <div>Current Pot: {currentPot}</div>
+                                <div>{parseGamePhase(gamePhase)}</div>
+                                <div>POT: {currentPot}</div>
                             </div>
                             {blindPrompt && (
                                 <div className="game blind-prompt">
