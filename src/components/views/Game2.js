@@ -10,6 +10,7 @@ import "styles/views/Game2.scss";
 import ScoreBoard from "../ui/ScoreBoard";
 import VideoDisplay from "../ui/VideoDisplay";
 import PlayerHand from "../ui/PlayerHand";
+import ShowDown from "../ui/ShowDown";
 import {Button} from "../ui/Button";
 import SettingsData from "../../models/SettingsData";
 
@@ -28,6 +29,8 @@ const Game2 = () => {
     const [currentPot, setCurrentPot] = useState(0)
     const [gamePhase, setGamePhase] = useState("")
     const [settings, setSettings] = useState(new SettingsData())
+    const [displayShowdown, setDisplayShowdown] = useState(false)
+    const [showdownData, setShowdownData] = useState(null)
 
     /** Video data */
     const [videoData, setVideoData] = useState(null)
@@ -138,7 +141,11 @@ const Game2 = () => {
 
     const handleGameEnd = () => {}
 
-    const handleShowDown = () => {}
+    const handleShowDown = (message) => {
+        const parsedMessage = JSON.parse(message.body)
+        setShowdownData(parsedMessage)
+        setDisplayShowdown(true)
+    }
 
     const closeGame = () => {
         stompClient.current.send(`/app/games/${gameId}/close`, {}, "close blease")
@@ -251,6 +258,11 @@ const Game2 = () => {
                             <p>Error Message: {errorMessage}</p>
                             <Button onClick={handleCloseError}>Close</Button>
                         </div>
+                    )}
+                    {displayShowdown && (
+                        <ShowDown showdownData={showdownData}
+                                  setDisplayShowdown={setDisplayShowdown}
+                        />
                     )}
                 </div>
             </BaseContainer>
