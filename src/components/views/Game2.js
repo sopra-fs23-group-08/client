@@ -10,6 +10,7 @@ import "styles/views/Game2.scss";
 import ScoreBoard from "../ui/ScoreBoard";
 import VideoDisplay from "../ui/VideoDisplay";
 import PlayerHand from "../ui/PlayerHand";
+import ShowDown from "../ui/ShowDown";
 import {Button} from "../ui/Button";
 import SettingsData from "../../models/SettingsData";
 
@@ -28,6 +29,8 @@ const Game2 = () => {
     const [currentPot, setCurrentPot] = useState(0)
     const [gamePhase, setGamePhase] = useState("")
     const [settings, setSettings] = useState(new SettingsData())
+    const [displayShowdown, setDisplayShowdown] = useState(false)
+    const [showdownData, setShowdownData] = useState(null)
 
     /** Video data */
     const [videoData, setVideoData] = useState(null)
@@ -101,7 +104,7 @@ const Game2 = () => {
     /** Websocket Message Handlers */
     const handlePlayersUpdate = (message) => {
         const playerArray = JSON.parse(message.body)
-        playerArray.map((p) => {
+        playerArray.forEach((p) => {
             if (p.token === user.token) {
                 setPlayer(p)
             }
@@ -138,7 +141,11 @@ const Game2 = () => {
 
     const handleGameEnd = () => {}
 
-    const handleShowDown = () => {}
+    const handleShowDown = (message) => {
+        const parsedMessage = JSON.parse(message.body)
+        setShowdownData(parsedMessage)
+        setDisplayShowdown(true)
+    }
 
     const closeGame = () => {
         stompClient.current.send(`/app/games/${gameId}/close`, {}, "close blease")
@@ -206,6 +213,23 @@ const Game2 = () => {
         }
     }
 
+    const parseGamePhase = (gamePhase) => {
+        switch(gamePhase) {
+            case "FIRST_BETTING_ROUND":
+                return "First Betting Round"
+            case "SECOND_BETTING_ROUND":
+                return "Second Betting Round"
+            case "THIRD_BETTING_ROUND":
+                return "Third Betting Round"
+            case "FOURTH_BETTING_ROUND":
+                return "Fourth Betting Round"
+            case "END_AFTER_FOURTH_BETTING_ROUND":
+                return "Game over"
+            default:
+                return "Starting..."
+        }
+    }
+
     let content = <Spinner/>
 
     if(player) {
@@ -224,9 +248,8 @@ const Game2 = () => {
                         <div className="game content sidebar">
                             <Button onClick={handleLeaveGame}>Leave Game</Button>
                             <div className="game info">
-                                <div>INFO</div>
-                                <div>Round: {gamePhase}</div>
-                                <div>Current Pot: {currentPot}</div>
+                                <div>{parseGamePhase(gamePhase)}</div>
+                                <div>POT: {currentPot}</div>
                             </div>
                             {blindPrompt && (
                                 <div className="game blind-prompt">
@@ -251,6 +274,11 @@ const Game2 = () => {
                             <p>Error Message: {errorMessage}</p>
                             <Button onClick={handleCloseError}>Close</Button>
                         </div>
+                    )}
+                    {displayShowdown && (
+                        <ShowDown showdownData={showdownData}
+                                  setDisplayShowdown={setDisplayShowdown}
+                        />
                     )}
                 </div>
             </BaseContainer>

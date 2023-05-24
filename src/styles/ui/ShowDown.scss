@@ -1,0 +1,86 @@
+@import 'src/styles/theme';
+
+.showdown {
+  &.container {
+    width: 100vw;
+    height: 100vh;
+    @include center;
+    position: absolute;
+  }
+  &.card {
+    position: relative;
+    @include card;
+    width: 95vw;
+    height: 95vh;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+    align-items: center;
+    padding: 2em;
+  }
+  &.player {
+    &.box {
+      @include center; // maybe change justify content here
+      padding: 1em;
+      flex-direction: column;
+      max-width: 30%;
+      height: 40%;
+      &.winner {
+        border: 5px solid $accent;
+      }
+    }
+    &.header {
+      color: $black;
+      font-weight: bold;
+      max-width: 90%;
+      max-height: 15%;
+    }
+    &.hand {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      overflow: auto;
+      max-width: 100%;
+      max-height: 80%;
+    }
+    &.hand::after {
+
+    }
+  }
+  &.comment {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    padding: 0.5em;
+    max-width: 90%;
+    &.correct {
+      background-color: $white;
+      color: $black; // dont know if necessary
+      border-radius: 0.5em;
+      border: 5px solid $green;
+    }
+    &.wrong {
+      background-color: $white;
+      color: $black; // dont know if necessary
+      border-radius: 0.5em;
+      border: 5px solid $red;
+    }
+    &.header {
+      font-weight: bold;
+      max-width: 90%;
+      max-height: 15%;
+    }
+    &.body {
+      max-width: 90%;
+      max-height: 85%;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+  }
+  &.button {
+    position: absolute;
+    top: 30px;
+    right: 30px;
+  }
+}
