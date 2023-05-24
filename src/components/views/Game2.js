@@ -101,7 +101,7 @@ const Game2 = () => {
     /** Websocket Message Handlers */
     const handlePlayersUpdate = (message) => {
         const playerArray = JSON.parse(message.body)
-        playerArray.map((p) => {
+        playerArray.forEach((p) => {
             if (p.token === user.token) {
                 setPlayer(p)
             }
