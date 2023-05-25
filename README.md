@@ -28,6 +28,35 @@ The JavaScript-written front end of this project uses the React framework. Persi
 
 ## Illustrations
 
+<h3 align="center">
+  <br>
+  <a href="https://github.com/sopra-fs23-group-08"><img src="/READMEpictures/GuestHome.png" width="200"></a>
+  <br>
+  Home - Home page before every game.
+  <br>
+</h3>
+<h3 align="center">
+  <br>
+  <a href="https://github.com/sopra-fs23-group-08"><img src="/READMEpictures/Lobby.png" width="200"></a>
+  <br>
+  Lobby - Lobby before every game.
+  <br>
+</h3>
+<h3 align="center">
+  <br>
+  <a href="https://github.com/sopra-fs23-group-08"><img src="/READMEpictures/Game.png" width="200"></a>
+  <br>
+  Game - The actual game. 
+  <br>
+</h3>
+<h3 align="center">
+  <br>
+  <a href="https://github.com/sopra-fs23-group-08"><img src="/READMEpictures/EndGame.png" width="200"></a>
+  <br>
+  End of the game
+  <br>
+</h3>
+
 
 ## Roadmap
 
