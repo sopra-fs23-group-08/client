@@ -226,7 +226,7 @@ const Lobby = () => {
     /** ON MOUNT/DISMOUNT */
     //NOSONAR
     useEffect(() => {
-        
+
         window.addEventListener("beforeunload", handleLeaveGame);
 
         // check if user is host -> able to modify settings
@@ -256,7 +256,7 @@ const Lobby = () => {
             }
 
             // TODO: catch errors somehow - WS errors are not propagated to the client yet
-            const name = user.name;
+            const name = user.username;
             const token = user.token;
             const requestBody = JSON.stringify({name, token});
                 client.send(

@@ -24,11 +24,11 @@ const Register = () => {
             const response = await api.post('/users', requestBody);
 
             // Get the returned user and update context
-            const user = new User(response.data);
-            setUser(user);
+            const regUser = new User(response.data);
+            setUser(regUser);
 
             // Store the token into the local storage.
-            localStorage.setItem('token', user.token);
+            localStorage.setItem('token', regUser.token);
 
             history.push(`/home`);
         }
