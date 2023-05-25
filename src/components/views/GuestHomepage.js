@@ -110,6 +110,7 @@ const GuestHomepage = () => {
     }
 
     const doLogout = () => {
+        localStorage.removeItem("token")
         setUser(null);
         history.push("/login")
     }
