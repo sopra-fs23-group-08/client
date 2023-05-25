@@ -13,6 +13,10 @@ Yuker Tuker is an exciting and competitive game that allows players to compete a
 ## Technologies
 The JavaScript-written front end of this project uses the React framework. Persistence is managed through JPA/Hibernate. Communication between the server and client is achieved through REST and websockets (SockJS), with the additional usage of the STOMP messaging protocol for websockets. <!-- # recheck  -->
 
+## High Level Components
+
+The StompContext sets up a context provider for managing the WebSocket connection using SockJS and StompJS. In addition, Game2 is important since it is the main view of the game itself. Furthermore, Showdown is another important part of the code since it shows the end of the game.  
+
 ## Launch & Deployment
 
 - npm run dev
@@ -61,6 +65,7 @@ The JavaScript-written front end of this project uses the React framework. Persi
 ## Roadmap
 
 - In-game chat 
+- Automatic blind deduction
 - Improved UI; structuring CSS code, replacing material ui components with custom ones
 
 ## Authors and Acknowledgment
