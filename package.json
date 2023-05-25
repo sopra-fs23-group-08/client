@@ -7,6 +7,7 @@
     "@material-ui/icons": "^4.11.3",
     "antd": "^5.4.6",
     "axios": "^0.24.0",
+    "cors": "^2.8.5",
     "net": "^1.0.2",
     "node-gyp": "^8.4.1",
     "node-sass": "^8.0.0",
@@ -20,7 +21,7 @@
   "scripts": {
     "dev": "react-scripts start",
     "start": "serve -s build",
-    "build": "CI=false react-scripts build",
+    "build": "react-scripts build --no-ci",
     "postbuild": "CI=true",
     "eject": "react-scripts eject",
     "test": "react-scripts test --env=jsdom"
