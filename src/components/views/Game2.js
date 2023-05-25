@@ -15,6 +15,7 @@ import {Button} from "../ui/Button";
 import SettingsData from "../../models/SettingsData";
 
 const Game2 = () => {
+
     /** View/Context info */
     const { gameId } = useParams();
     const { stompClient } = useContext(StompContext);
@@ -74,6 +75,7 @@ const Game2 = () => {
             closeGameSubscription.current = stompClient.current.subscribe(`/topic/games/${gameId}/close`, handleCloseGame)
             errorSubscription.current = stompClient.current.subscribe(`/topic/games/${gameId}/error`, handleError)
         }
+
         // get all info
         websocketSetup().then(() => {
             stompClient.current.send(`/app/games/${gameId}/sendData`, {}, "gimme data blease")
@@ -113,6 +115,7 @@ const Game2 = () => {
             setPlayers(playerArray)
         }
     }
+
     const handleGameStateUpdate = (message) => {
         const gameState = JSON.parse(message.body)
         if(isMounted.current) {
@@ -122,18 +125,21 @@ const Game2 = () => {
             // hasStarted and roundWinnerToken are also passed here
         }
     }
+
     const handleVideoDataUpdate = (message) => {
         const data = JSON.parse(message.body)
         if(isMounted.current) {
             setVideoData(data)
         }
     }
+
     const handleSettingsUpdate = (message) => {
         const settings = JSON.parse(message.body)
         if(isMounted.current) {
             setSettings(settings)
         }
     }
+
     const handleNewHand = (message) => {
         const hand = JSON.parse(message.body)
         setComments(hand)
@@ -196,6 +202,7 @@ const Game2 = () => {
                 JSON.stringify({decision, raiseAmount}));
         }
     }
+
     const handlePlayerFold = () => {
         const decision = "FOLD"
         const raiseAmount = "0"
@@ -213,6 +220,7 @@ const Game2 = () => {
         }
     }
 
+    /** Helpers */
     const parseGamePhase = (gamePhase) => {
         switch(gamePhase) {
             case "FIRST_BETTING_ROUND":
@@ -284,7 +292,6 @@ const Game2 = () => {
             </BaseContainer>
         )
     }
-
     return content;
 }
 
