@@ -33,7 +33,7 @@ const Login = () => {
 
       // Get the returned user and update a new object.
       const fetchedUser = new User(response.data);
-
+      setUser(fetchedUser);
       // Store the token into the local storage.
       localStorage.setItem('token', fetchedUser.token);
 
