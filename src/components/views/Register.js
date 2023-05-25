@@ -19,28 +19,28 @@ const Register = () => {
     const [passwordMatch, setPasswordMatch] = useState(false);
 
     const doRegister = async () => {
-        
         try {
             const requestBody = JSON.stringify({username, password});
             const response = await api.post('/users', requestBody);
 
-            // Get the returned user and update a new object.
+            // Get the returned user and update context
             const user = new User(response.data);
             setUser(user);
-
 
             // Store the token into the local storage.
             localStorage.setItem('token', user.token);
 
-
-            // Login successfully worked --> navigate to the route /game in the GameRouter
             history.push(`/home`);
-        }   catch (error) {
-            alert(`Something went wrong during the sign up: \n${handleError(error)}`);
-            window.location.reload();
-      
-          }
-        
+        }
+        catch (error) {
+            if(error.response.status === 409)
+            {
+                alert(`${error.response.data.message}`)
+            }
+            else{
+                alert(`Something went wrong during the registration: \n${handleError(error)}`);
+            }
+        }
     };
 
     return (
