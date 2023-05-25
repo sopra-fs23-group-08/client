@@ -18,9 +18,7 @@ import {
 } from "@material-ui/core";
 import {makeStyles} from "@material-ui/core/styles";
 import React, {useContext, useState} from "react";
-import SearchIcon from '@material-ui/icons/Search';
 import VideogameAssetIcon from '@material-ui/icons/VideogameAsset';
-import AccountBoxIcon from '@material-ui/icons/AccountBox';
 import InputIcon from '@material-ui/icons/Input';
 import HowToPlay from "../ui/HowToPlay";
 import {api} from "../../helpers/api";
@@ -110,11 +108,6 @@ const Homepage = () => {
         }
     }
 
-    const openProfile = () => {
-        // TODO implement
-        //
-    }
-
     const handleLobbyIDChange = (e) => {setLobbyID(e.target.value)}
 
     const toggleHowToPlay = () => {
@@ -156,13 +149,6 @@ const Homepage = () => {
                           className={classes.cardContainer}
                     >
                         <Grid item>
-                            <Tooltip title={'Profile'}>
-                                <IconButton onClick={openProfile}>
-                                    <AccountBoxIcon className={classes.menuIcon}/>
-                                </IconButton>
-                            </Tooltip>
-                        </Grid>
-                        <Grid item>
                             <Tooltip title={'Join Game'}>
                                 <IconButton onClick={toggleDialog} className={classes.button} style={{ color: 'black' }} aria-hidden = {false}>
                                     <InputIcon className={classes.menuIcon} aria-hidden = {false}/>
@@ -191,13 +177,6 @@ const Homepage = () => {
                             <Tooltip title={'Create Game'}>
                                 <IconButton onClick={() => {createGame()}}>
                                     <VideogameAssetIcon className={classes.menuIcon}/>
-                                </IconButton>
-                            </Tooltip>
-                        </Grid>
-                        <Grid item>
-                            <Tooltip title={'Search Player'}>
-                                <IconButton onClick={() => history.push("/users/search")}>
-                                    <SearchIcon className={classes.menuIcon}/>
                                 </IconButton>
                             </Tooltip>
                         </Grid>

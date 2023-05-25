@@ -12,7 +12,6 @@ import {
 } from "@material-ui/core";
 import {makeStyles} from "@material-ui/core/styles";
 import React, {useContext, useState} from "react";
-import SearchIcon from '@material-ui/icons/Search';
 import VideogameAssetIcon from '@material-ui/icons/VideogameAsset';
 import InputIcon from '@material-ui/icons/Input';
 import HowToPlay from "../ui/HowToPlay";
@@ -177,13 +176,6 @@ const GuestHomepage = () => {
                             <Tooltip title={'Create Game'}>
                                 <IconButton onClick={() => {createGame()}}>
                                     <VideogameAssetIcon className={classes.menuIcon}/>
-                                </IconButton>
-                            </Tooltip>
-                        </Grid>
-                        <Grid item>
-                            <Tooltip title={'Search Player'}>
-                                <IconButton onClick={() => history.push("/users/search")}>
-                                    <SearchIcon className={classes.menuIcon}/>
                                 </IconButton>
                             </Tooltip>
                         </Grid>
