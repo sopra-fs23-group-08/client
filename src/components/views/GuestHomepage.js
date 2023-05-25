@@ -17,6 +17,7 @@ import InputIcon from '@material-ui/icons/Input';
 import HowToPlay from "../ui/HowToPlay";
 import {api} from "../../helpers/api";
 import UserContext from "../contexts/UserContext";
+import ExitToAppIcon from "@material-ui/icons/ExitToApp";
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -69,6 +70,7 @@ const GuestHomepage = () => {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [LobbyID, setLobbyID] = useState([""]);
     const { user } = useContext(UserContext);
+    const { setUser } = useContext(UserContext);
     const [showHowToPlay, setShowHowToPlay] = useState(false);
 
     const createGame = async () => {
@@ -107,6 +109,10 @@ const GuestHomepage = () => {
         }
     }
 
+    const doLogout = () => {
+        setUser(null);
+        history.push("/login")
+    }
     const handleLobbyIDChange = (e) => {setLobbyID(e.target.value)}
 
     const toggleHowToPlay = () => {
@@ -176,6 +182,13 @@ const GuestHomepage = () => {
                             <Tooltip title={'Create Game'}>
                                 <IconButton onClick={() => {createGame()}}>
                                     <VideogameAssetIcon className={classes.menuIcon}/>
+                                </IconButton>
+                            </Tooltip>
+                        </Grid>
+                        <Grid item>
+                            <Tooltip title={'Log out'}>
+                                <IconButton onClick={() => {doLogout()}}>
+                                    <ExitToAppIcon className={classes.menuIcon}/>
                                 </IconButton>
                             </Tooltip>
                         </Grid>

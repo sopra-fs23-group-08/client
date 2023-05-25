@@ -1,9 +1,3 @@
-
-
-
-
-
-
 import {useHistory} from "react-router-dom";
 import {
     Grid,
@@ -17,12 +11,15 @@ import {
     Tooltip, Dialog, DialogTitle, DialogContent, TextField, DialogActions
 } from "@material-ui/core";
 import {makeStyles} from "@material-ui/core/styles";
-import React, {useContext, useState} from "react";
+import React, {useContext, useEffect, useState} from "react";
 import VideogameAssetIcon from '@material-ui/icons/VideogameAsset';
 import InputIcon from '@material-ui/icons/Input';
+import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import HowToPlay from "../ui/HowToPlay";
-import {api} from "../../helpers/api";
+import {api, handleError} from "../../helpers/api";
 import UserContext from "../contexts/UserContext";
+import User from "../../models/User";
+import {Spinner} from "../ui/Spinner";
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -70,7 +67,29 @@ const Homepage = () => {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [LobbyID, setLobbyID] = useState([""]);
     const { user } = useContext(UserContext);
+    const { setUser } = useContext(UserContext);
     const [showHowToPlay, setShowHowToPlay] = useState(false);
+
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if(!user && token) {
+            try {
+                api.get(`/users/${token}`).then((response) => {
+                    const u = new User(response.data)
+                    setUser(u);
+                })
+            }
+            catch (error) {
+                if (error.response.status === 404) {
+                    alert(`${error.response.data.message}`)
+                }
+                else {
+                    console.error(`Something went wrong while fetching the user: \n${handleError(error)}`)
+                    alert("Something went wrong while fetching the user!")
+                }
+            }
+        }
+    }, [])
 
     const createGame = async () => {
         console.log("Creating game...");
@@ -108,6 +127,12 @@ const Homepage = () => {
         }
     }
 
+    const doLogout = () => {
+        localStorage.removeItem("token");
+        setUser(null);
+        history.push("/login");
+    }
+
     const handleLobbyIDChange = (e) => {setLobbyID(e.target.value)}
 
     const toggleHowToPlay = () => {
@@ -119,72 +144,85 @@ const Homepage = () => {
     }
 
 
-    return (
-        <Grid container
-              className={classes.root}
-        >
-            <Grid item>
-                <Card
-                    className={classes.mainCard}
-                >
-                    <AppBar
-                        position={'relative'}
-                    >
-                        <Toolbar
-                            className={classes.cardBar}
-                        >
-                            <Avatar className={classes.headerAvatar}>
-                                {user.username.charAt(0)}
-                            </Avatar>
-                            <Typography className={classes.headerTitle}>
-                                Playing as {user.username}
-                            </Typography>
-                            <button color = {'inherit'}  onClick={toggleHowToPlay}>How to Play</button>
-                                {/* Show how to play window when "help" button is clicked */}
-                                {showHowToPlay && <HowToPlay handleClose={() => setShowHowToPlay(false)} />}
-                        </Toolbar>
-                    </AppBar>
+    let content = <Spinner/>;
 
-                    <Grid container
-                          className={classes.cardContainer}
+    if (user) {
+        content = (
+            <Grid container
+                  className={classes.root}
+            >
+                <Grid item>
+                    <Card
+                        className={classes.mainCard}
                     >
-                        <Grid item>
-                            <Tooltip title={'Join Game'}>
-                                <IconButton onClick={toggleDialog} className={classes.button} style={{ color: 'black' }} aria-hidden = {false}>
-                                    <InputIcon className={classes.menuIcon} aria-hidden = {false}/>
-                                </IconButton>
-                            </Tooltip>
-                            <Dialog open={dialogOpen} onClose={toggleDialog}>
-                                <DialogTitle>
-                                    Join Game
-                                </DialogTitle>
-                                <DialogContent>
-                                    <TextField label={"Enter Lobby ID"}
-                                               onChange={handleLobbyIDChange}
-                                    />
-                                </DialogContent>
-                                <DialogActions>
-                                    <Button onClick={toggleDialog}>
-                                        Cancel
-                                    </Button>
-                                    <Button onClick={joinLobby}>
-                                        Join
-                                    </Button>
-                                </DialogActions>
-                            </Dialog>
+                        <AppBar
+                            position={'relative'}
+                        >
+                            <Toolbar
+                                className={classes.cardBar}
+                            >
+                                <Avatar className={classes.headerAvatar}>
+                                    {user.username.charAt(0)}
+                                </Avatar>
+                                <Typography className={classes.headerTitle}>
+                                    Playing as {user.username}
+                                </Typography>
+                                <button color = {'inherit'}  onClick={toggleHowToPlay}>How to Play</button>
+                                    {/* Show how to play window when "help" button is clicked */}
+                                    {showHowToPlay && <HowToPlay handleClose={() => setShowHowToPlay(false)} />}
+                            </Toolbar>
+                        </AppBar>
+
+                        <Grid container
+                              className={classes.cardContainer}
+                        >
+                            <Grid item>
+                                <Tooltip title={'Join Game'}>
+                                    <IconButton onClick={toggleDialog} className={classes.button} style={{ color: 'black' }} aria-hidden = {false}>
+                                        <InputIcon className={classes.menuIcon} aria-hidden = {false}/>
+                                    </IconButton>
+                                </Tooltip>
+                                <Dialog open={dialogOpen} onClose={toggleDialog}>
+                                    <DialogTitle>
+                                        Join Game
+                                    </DialogTitle>
+                                    <DialogContent>
+                                        <TextField label={"Enter Lobby ID"}
+                                                   onChange={handleLobbyIDChange}
+                                        />
+                                    </DialogContent>
+                                    <DialogActions>
+                                        <Button onClick={toggleDialog}>
+                                            Cancel
+                                        </Button>
+                                        <Button onClick={joinLobby}>
+                                            Join
+                                        </Button>
+                                    </DialogActions>
+                                </Dialog>
+                            </Grid>
+                            <Grid item>
+                                <Tooltip title={'Create Game'}>
+                                    <IconButton onClick={() => {createGame()}}>
+                                        <VideogameAssetIcon className={classes.menuIcon}/>
+                                    </IconButton>
+                                </Tooltip>
+                            </Grid>
+                            <Grid item>
+                                <Tooltip title={'Log out'}>
+                                    <IconButton onClick={() => {doLogout()}}>
+                                        <ExitToAppIcon className={classes.menuIcon}/>
+                                    </IconButton>
+                                </Tooltip>
+                            </Grid>
                         </Grid>
-                        <Grid item>
-                            <Tooltip title={'Create Game'}>
-                                <IconButton onClick={() => {createGame()}}>
-                                    <VideogameAssetIcon className={classes.menuIcon}/>
-                                </IconButton>
-                            </Tooltip>
-                        </Grid>
-                    </Grid>
-                </Card>
+                    </Card>
+                </Grid>
             </Grid>
-        </Grid>
-    )
+        )
+    }
+
+    return content;
 }
 
 export default Homepage;
