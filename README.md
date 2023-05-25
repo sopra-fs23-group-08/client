@@ -61,7 +61,6 @@ The JavaScript-written front end of this project uses the React framework. Persi
 ## Roadmap
 
 - In-game chat 
-- Automatic blind deduction
 - Improved UI; structuring CSS code, replacing material ui components with custom ones
 
 ## Authors and Acknowledgment
