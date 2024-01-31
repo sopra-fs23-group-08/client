@@ -12,12 +12,12 @@ import {
 } from "@material-ui/core";
 import {makeStyles} from "@material-ui/core/styles";
 import React, {useContext, useState} from "react";
-import SearchIcon from '@material-ui/icons/Search';
 import VideogameAssetIcon from '@material-ui/icons/VideogameAsset';
 import InputIcon from '@material-ui/icons/Input';
 import HowToPlay from "../ui/HowToPlay";
 import {api} from "../../helpers/api";
 import UserContext from "../contexts/UserContext";
+import ExitToAppIcon from "@material-ui/icons/ExitToApp";
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -70,6 +70,7 @@ const GuestHomepage = () => {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [LobbyID, setLobbyID] = useState([""]);
     const { user } = useContext(UserContext);
+    const { setUser } = useContext(UserContext);
     const [showHowToPlay, setShowHowToPlay] = useState(false);
 
     const createGame = async () => {
@@ -108,6 +109,11 @@ const GuestHomepage = () => {
         }
     }
 
+    const doLogout = () => {
+        localStorage.removeItem("token")
+        setUser(null);
+        history.push("/login")
+    }
     const handleLobbyIDChange = (e) => {setLobbyID(e.target.value)}
 
     const toggleHowToPlay = () => {
@@ -134,10 +140,10 @@ const GuestHomepage = () => {
                             className={classes.cardBar}
                         >
                             <Avatar className={classes.headerAvatar}>
-                                {user.name.charAt(0)}
+                                {user ? user.name.charAt(0) :("")}
                             </Avatar>
                             <Typography className={classes.headerTitle}>
-                                Playing as {user.name}
+                                Playing as {user ? user.name : "no User"}
                             </Typography>
                             <button color = {'inherit'}  onClick={toggleHowToPlay}>How to Play</button>
                                 {/* Show how to play window when "help" button is clicked */}
@@ -181,9 +187,9 @@ const GuestHomepage = () => {
                             </Tooltip>
                         </Grid>
                         <Grid item>
-                            <Tooltip title={'Search Player'}>
-                                <IconButton onClick={() => history.push("/users/search")}>
-                                    <SearchIcon className={classes.menuIcon}/>
+                            <Tooltip title={'Log out'}>
+                                <IconButton onClick={() => {doLogout()}}>
+                                    <ExitToAppIcon className={classes.menuIcon}/>
                                 </IconButton>
                             </Tooltip>
                         </Grid>

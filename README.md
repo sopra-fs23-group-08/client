@@ -1,46 +1,87 @@
-# SoPra FS23 - Client Template with build pack
+<!-- # SoPra RESTful Service Template FS23
+edit for title  -->
+<h1 align="center">
+<br>
+Yuker Tuker-Client
+<br>
+</h1>
 
-## Getting started
-
-Read and go through these Tutorials. It will make your life easier:)
-
-- Read the React [Docs](https://reactjs.org/docs/getting-started.html)
-- Do this React [Getting Started](https://reactjs.org/tutorial/tutorial.html) Tutorial (it doesn’t assume any existing React knowledge)
-- Get an Understanding of [CSS](https://www.w3schools.com/Css/), [SCSS](https://sass-lang.com/documentation/syntax), and [HTML](https://www.w3schools.com/html/html_intro.asp)!
-
-Next, there are two other technologies that you should look at:
-
-* [react-router-dom](https://reacttraining.com/react-router/web/guides/quick-start) offers declarative routing for React. It is a collection of navigational components that fit nicely with the application. 
-* [react-hooks](https://reactrouter.com/web/api/Hooks) let you access the router's state and perform navigation from inside your components.
-
-## Prerequisites and Installation
-For your local development environment, you will need Node.js. You can download it [here](https://nodejs.org). All other dependencies, including React, get installed with:
-
-```npm install```
-
-Run this command before you start your application for the first time. Next, you can start the app with:
-
-```npm run dev```
-
-Now you can open [http://localhost:3000](http://localhost:3000) to view it in the browser.
-
-Notice that the page will reload if you make any edits. You will also see any lint errors in the console (use Google Chrome).
-
-### Testing
-Testing is optional, and you can run the tests with `npm run test`.
-This launches the test runner in an interactive watch mode. See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-> For macOS user running into a 'fsevents' error: https://github.com/jest-community/vscode-jest/issues/423
-
-### Build
-Finally, `npm run build` builds the app for production to the `build` folder.<br>
-It correctly bundles React in production mode and optimizes the build for the best performance: the build is minified, and the filenames include hashes.<br>
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-## Learn More
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Introduction
+Yuker Tuker is an exciting and competitive game that allows players to compete against each other in guessing a random YouTube video from a selected playlist, using a similar logic to poker. This is the front-end component of our project. The back-end part can be found [here](https://github.com/sopra-fs23-group-08/server).
 
 
-> Thanks to Lucas Pelloni and Kyrill Hux for working on the template.
+## Technologies
+The JavaScript-written front end of this project uses the React framework. Persistence is managed through JPA/Hibernate. Communication between the server and client is achieved through REST and websockets (SockJS), with the additional usage of the STOMP messaging protocol for websockets. <!-- # recheck  -->
+
+## High Level Components
+
+The StompContext sets up a context provider for managing the WebSocket connection using SockJS and StompJS. In addition, Game2 is important since it is the main view of the game itself. Furthermore, Showdown is another important part of the code since it shows the end of the game.  
+
+## Launch & Deployment
+
+- npm run dev
+
+  This command runs the app in the development mode.
+  Open http://localhost:3000 to view it in the browser.
+
+  The page will reload if you make edits and save them.
+
+- npm run build
+
+  This command builds the app for production to the build folder.
+
+## Illustrations
+
+<h3 align="center">
+  <br>
+  <a href="https://github.com/sopra-fs23-group-08"><img src="/READMEpictures/GuestHome.png" width="500"></a>
+  <br>
+  Home - Home page before every game.
+  <br>
+</h3>
+<h3 align="center">
+  <br>
+  <a href="https://github.com/sopra-fs23-group-08"><img src="/READMEpictures/Lobby.png" width="500"></a>
+  <br>
+  Lobby - Lobby before every game.
+  <br>
+</h3>
+<h3 align="center">
+  <br>
+  <a href="https://github.com/sopra-fs23-group-08"><img src="/READMEpictures/Game.png" width="500"></a>
+  <br>
+  Game - The actual game. 
+  <br>
+</h3>
+<h3 align="center">
+  <br>
+  <a href="https://github.com/sopra-fs23-group-08"><img src="/READMEpictures/EndGame.png" width="500"></a>
+  <br>
+  End of the game
+  <br>
+</h3>
+
+
+## Roadmap
+
+- In-game chat 
+- Automatic blind deduction
+- Improved UI; structuring CSS code, replacing material ui components with custom ones
+
+## Authors and Acknowledgment
+
+
+SoPra Group 08 2023 consists of [Serafin Schoch](https://github.com/S3r4f1n), [Jonas Krumm](https://github.com/Dedphish),
+[Yating Pan](https://github.com/YatingPan), [Rolando Villaseñor](https://github.com/RoVi80).
+
+We would like to thank our teaching assistant [Sheena Lang](https://github.com/SheenaGit) for her help throughout the semester. We also thank Youtube for providing its API, and to the game of poker for inspiring our idea. This semester has proven to be both challenging and intriguing, offering us valuable opportunities for growth, as we acquired extensive knowledge not only in coding but also in teamwork and project execution. Even though none of us are doing Informatics as a major, we appreciate the opportunity and the experience gained from this project.
+
+## License
+
+GNU GPLv3
+
+
+
+
+
+

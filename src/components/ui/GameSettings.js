@@ -100,7 +100,7 @@ const GameSettings = (props) => {
             </Grid>
             <Grid item xs={6}>
                 <SettingBox label={"Balance & Blinds"}>
-                    <LabeledSetting label={"Initial Balance"}>
+                    <LabeledSetting label={"Initial Score"}>
                         <TextField onChange={event => props.onBalanceChange(event.target.value)}
                                    disabled={!props.isHost}
                                    value={props.balance}

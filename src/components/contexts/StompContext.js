@@ -6,8 +6,6 @@ import {getDomain} from "../../helpers/getDomain";
 const StompContext = createContext({});
 
 export function StompProvider (props) {
-  //const [stompClient, setStompClient] = useState(null);
-  //const [isConnected, setIsConnected] = useState(false);
 
   const stompClient = useRef(null);
   const isConnected = useRef(false);
@@ -29,25 +27,25 @@ export function StompProvider (props) {
 
   /** CLEANUP */
   useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (stompClient.current) {
+        alert("Websocket disconnected! You might need to start a new game.")
+        stompClient.current.disconnect();
+        isConnected.current = false;
+      }
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+
+    // disconnect & remove beforeunload listener on component unmount
     return () => {
         if (stompClient.current) {
             stompClient.current.disconnect();
             isConnected.current = false;
         }
+        window.removeEventListener('beforeunload', handleBeforeUnload)
     }
   }, []);
 
-  /* disconnect the Stomp client on unmount
-  useEffect(() => {
-    return () => {
-      if (stompClient) {
-        stompClient.disconnect();
-        setIsConnected(false);
-      }
-    };
-  }, [stompClient]);*/
-
-  // check if the Stomp client is connected
 
   return (
     <StompContext.Provider value={{ stompClient, isConnected, connect }}>
@@ -58,7 +56,3 @@ export function StompProvider (props) {
 
 
 export default StompContext;
-
-
-
-

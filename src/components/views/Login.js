@@ -9,6 +9,7 @@ import logo from "../../styles/assets/logo.png";
 import {Dialog, DialogTitle, DialogActions, DialogContent, TextField} from "@material-ui/core";
 import UserContext from "../contexts/UserContext";
 import User from "../../models/User";
+import {api, handleError} from "../../helpers/api";
 
 /*
 It is possible to add multiple components inside a single file,
@@ -26,23 +27,33 @@ const Login = () => {
   const [guestUsername, setGuestUsername] = useState("");
 
   const doLogin = async () => {
-    /*
     try {
       const requestBody = JSON.stringify({username, password});
-      const response = await api.post('/users', requestBody);
+      const response = await api.post("/login", requestBody);
 
       // Get the returned user and update a new object.
-      setUser = new User(response.data);
-
+      const fetchedUser = new User(response.data);
+      setUser(fetchedUser);
       // Store the token into the local storage.
-      localStorage.setItem('token', user.token);
+      localStorage.setItem('token', fetchedUser.token);
 
       // Login successfully worked --> navigate to the route /game in the GameRouter
-      history.push(`/register`);
-    } catch (error) {
-      alert(`Something went wrong during the login: \n${handleError(error)}`);
+      history.push(`/home`);
     }
-    */
+    catch (error) {
+      const response = error.response;
+
+      if(response.status === 401) {
+        alert(`${response.data.message}`);
+      }
+
+      else if(response.status === 404) {
+        alert(`${response.data.message}`);
+      }
+      else {
+        alert(`Something went wrong during the login: \n${handleError(error)}`);
+      }
+    }
   };
 
   const toggleDialog = () => {
@@ -129,8 +140,4 @@ const Login = () => {
   );
 };
 
-/**
- * You can get access to the history object's properties via the withRouter.
- * withRouter will pass updated match, location, and history props to the wrapped component whenever it renders.
- */
 export default Login;

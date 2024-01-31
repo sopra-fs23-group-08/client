@@ -1,5 +1,5 @@
 import { Redirect, Route } from "react-router-dom";
-import Game from "components/views/Game";
+import Game from "components/views/TestGame";
 import PropTypes from 'prop-types';
 import Lobby from "../../views/Lobby";
 

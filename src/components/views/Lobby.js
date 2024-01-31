@@ -107,7 +107,7 @@ const Lobby = () => {
     const { user } = useContext(UserContext);
     const [players, setPlayers] = useState([]);
     const [host, setHost] = useState(null);
-    const isHost = useRef(false);
+    const [isHost, setIsHost] = useState(false);
 
     /** Settings TODO: remove standard youtube URL --> account for absent/false input */
     const [language, setLanguage] = useState("ENGLISH");
@@ -122,9 +122,9 @@ const Lobby = () => {
     const playersSubscription = useRef(null);
     const settingsSubscription = useRef(null);
     const gameStartSubscription = useRef(null);
+    const gameCloseSubscription = useRef(null);
 
     /** Handler functions */
-
     const handlePlayerUpdate = (message) => {
         const playerArray = JSON.parse(message.body);
         // Only update the state if there are changes to the player list
@@ -142,7 +142,6 @@ const Lobby = () => {
             setSmallBlind(settingsData.smallBlind.toString())
         }
     }
-
     const handleRemoteStartGame = (message) => {
         console.log("Received start game message:", message.data);
         gameStarting.current = true;
@@ -150,16 +149,19 @@ const Lobby = () => {
         history.push(`/games/${gameId}`);
     }
 
-
     const handleStartGame = () => {
         if(players.length < 2) {
             alert("You cannot play alone! :(")
             return;
         }
         gameStarting.current = true;
-        stompClient.current.send(`/app/games/${gameId}/start`, {}, "start blease");
-        isMounted.current = false;
-        history.push(`/games/${gameId}`);
+        handleSettingsSave().then(
+            () => {
+                stompClient.current.send(`/app/games/${gameId}/start`, {}, "start blease");
+                isMounted.current = false;
+                history.push(`/games/${gameId}`);
+            }
+        )
     };
 
     const handleLeaveGame = () => {
@@ -169,9 +171,18 @@ const Lobby = () => {
         const token = user.token;
         const name = user.name;
         const requestBody = JSON.stringify({ name, token });
-        // TODO catch exceptions somehow
         stompClient.current.send(destination, {}, requestBody);
+        if(isHost) {
+            stompClient.current.send(`/app/games/${gameId}/close`, {}, "close blease");
+        }
         history.push("/home");
+    }
+
+    const handleGameClosed = () => {
+        if(!isHost) {
+            alert("The host has left the game. You will be redirected to the homepage.");
+            history.push("/home");
+        }
     }
 
     function isPositiveInteger(n) {
@@ -213,6 +224,7 @@ const Lobby = () => {
     }
 
     /** ON MOUNT/DISMOUNT */
+    //NOSONAR
     useEffect(() => {
 
         window.addEventListener("beforeunload", handleLeaveGame);
@@ -224,7 +236,7 @@ const Lobby = () => {
             const hostPlayer = new Player(response.data);
             setHost(hostPlayer);
             if (hostPlayer.token === user.token) {
-                isHost.current = true;
+                setIsHost(true);
             }
         }
         checkHost();
@@ -236,21 +248,23 @@ const Lobby = () => {
             // SUBSCRIPTIONS //
             playersSubscription.current = client.subscribe(`/topic/games/${gameId}/players`, handlePlayerUpdate)
 
-            if(!isHost.current) {
+            if(!isHost) {
                 settingsSubscription.current = client.subscribe(`/topic/games/${gameId}/settings`, handleSettingsUpdate)
                 gameStartSubscription.current = client.subscribe(`/topic/games/${gameId}/start`, handleRemoteStartGame)
+                gameCloseSubscription.current = client.subscribe(`/topic/games/${gameId}/close`, handleGameClosed)
+                client.send(`/app/games/${gameId}/resendSettings`, {}, "gimme settings blease")
             }
 
             // TODO: catch errors somehow - WS errors are not propagated to the client yet
-            const name = user.name;
-            const token = localStorage.getItem("token");
+            const name = user.username;
+            const token = user.token;
             const requestBody = JSON.stringify({name, token});
-            client.send(
+                client.send(
                 `/app/games/${gameId}/players/add`,
                 {},
                 requestBody
-            );
-        }
+                );
+            }
         connectSocket();
 
         // CLEANUP //
@@ -258,10 +272,12 @@ const Lobby = () => {
             // unsubscribe from all subscriptions TODO check if I need to await the unsubscribe calls
             if(settingsSubscription.current) settingsSubscription.current.unsubscribe();
             if(playersSubscription.current) playersSubscription.current.unsubscribe();
+            if(gameCloseSubscription.current) gameCloseSubscription.current.unsubscribe();
             if(gameStartSubscription.current) gameStartSubscription.current.unsubscribe();
             window.removeEventListener("beforeunload", handleLeaveGame);
             if(!gameStarting.current) handleLeaveGame();
         }
+        //NOSONAR
     }, []);
 
 
@@ -269,7 +285,7 @@ const Lobby = () => {
     /** Realtime Components */
     let playerList = <PlayerList list={players}/>;
 
-    let settings = <GameSettings isHost={isHost.current}
+    let settings = <GameSettings isHost={isHost}
                                  // variables
                                  language={language}
                                  balance={initialBalance}
@@ -296,7 +312,7 @@ const Lobby = () => {
                             {host.name}'s lobby
                         </Typography>
                         <Button variant={"contained"}
-                                disabled={!isHost.current || players.length < 2}
+                                disabled={!isHost || players.length < 2}
                                 onClick={handleStartGame}
                         >
                             Start Game

@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {Dialog, DialogTitle, DialogContent, DialogActions, Button, Tooltip} from '@material-ui/core';
-import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
-import IconButton from '@material-ui/core/IconButton';
+import {Dialog, DialogTitle, DialogContent, DialogActions, Button} from '@material-ui/core';
 import PropTypes from "prop-types";
 
 
